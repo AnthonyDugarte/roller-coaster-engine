@@ -77,12 +77,6 @@ void RollerCoaster::setup()
     
     //add camera to viewport
     getRenderWindow()->addViewport(cam);
-       
-//    // [Monkeys]
-//    SceneNode* monkeyNode1 = worldNode->createChildSceneNode("monkeyNode1");
-//    Entity* mokeyEntity1 = scnMgr->createEntity("Suzanne.mesh");
-//    monkeyNode1->attachObject(mokeyEntity1);
-//    monkeyNode1->setPosition(0, 0, 0);
 
     // GUI
     scnMgr->addRenderQueueListener(getOverlaySystem());
@@ -162,7 +156,7 @@ void RollerCoaster::buttonHit(Button * button)
 {
     ProgressBar* pB1 = reinterpret_cast<ProgressBar *>(mTrayMgr->getWidget("pB1"));
     Real progress = pB1->getProgress() + 0.05; 
-    std::cout << progress << std::endl;
+    
     if (progress < 0.11f)
     {
         pB1->setComment("Hurry up!");

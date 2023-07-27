@@ -9,7 +9,3 @@ find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 
 add_executable(CC DesingGUI.cpp)
 target_link_libraries(CC OgreBites)
-
-# copy config files
-# configure_file(config/resources.cfg resources.cfg COPYONLY)
-# configure_file(config/plugins.cfg plugins.cfg COPYONLY)
