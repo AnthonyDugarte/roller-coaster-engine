@@ -31,6 +31,7 @@ class RollerCoaster : public ApplicationContext, public InputListener
         bool worldWasClicked;
         bool mMovableFound;
         const float rotationSpeed;
+        const float moveSpeed;
         
         SceneManager* scnMgr;
         RaySceneQuery* mRayScnQuery;
@@ -44,6 +45,7 @@ RollerCoaster::RollerCoaster() :
     worldWasClicked{false},
     mMovableFound{false},
     rotationSpeed{0.5f},
+    moveSpeed{5.f},
     scnMgr{nullptr},
     mRayScnQuery{0}
 {
@@ -90,6 +92,7 @@ void RollerCoaster::setup()
        
     // [Monkeys]
     SceneNode* monkeyNode1 = worldNode->createChildSceneNode("monkeyNode1");
+
     Entity* mokeyEntity1 = scnMgr->createEntity("ogrehead.mesh");
     monkeyNode1->attachObject(mokeyEntity1);
     monkeyNode1->setPosition(0, 0, 0);
@@ -167,50 +170,30 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
     {
         getRoot()->queueEndRendering();
     }
-    else if (evt.keysym.sym == SDLK_UP) // Up arrow : rotate x+ camera
-    {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->pitch(Degree(1));
-    }
-    else if (evt.keysym.sym == SDLK_DOWN) // Down arrow : rotate x- camera
-    {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->pitch(Degree(-1));
-    }
-    else if (evt.keysym.sym == SDLK_LEFT) // Left arrow : rotate y- camera
-    {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->yaw(Degree(-1));
-    }
-    else if (evt.keysym.sym == SDLK_RIGHT) // Right arrow : rotate y+ camera
-    {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->yaw(Degree(1));
-    }
     else if (evt.keysym.sym == 119) // Key "w" : move up camera
     {
-        auto direction = scnMgr->getCamera("myCam")->getRealUp();
+        auto direction = scnMgr->getCamera("myCam")->getRealDirection();
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(direction * 0.5);
+        cameraNode->translate(moveSpeed * direction);
     }
     else if (evt.keysym.sym == 115) //Key "s" : move down camera
     {
-        auto direction = scnMgr->getCamera("myCam")->getRealUp();
+        auto direction = scnMgr->getCamera("myCam")->getRealDirection();
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(-direction * 0.5);
+        cameraNode->translate(moveSpeed * (-direction));
     }
     
     else if (evt.keysym.sym == 97) // Key "a" : move left camera
     {
         auto direction = scnMgr->getCamera("myCam")->getRealRight();
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(-direction * 0.5);
+        cameraNode->translate(-direction * moveSpeed);
     }
     else if (evt.keysym.sym == 100) // Key "d" : move right camera
     {
         auto direction = scnMgr->getCamera("myCam")->getRealRight();
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(direction * 0.5);
+        cameraNode->translate(direction * moveSpeed);
     }
     
     return true;
@@ -219,9 +202,9 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 // Aply a rotation based on mouse speed
 void RollerCoaster::rotateScene(int speedX, int speedY) noexcept
 {
-    auto world = scnMgr->getSceneNode("worldNode");
-    world->yaw(Degree(speedX * rotationSpeed));
-    world->roll(Degree(speedY * rotationSpeed));
+    auto cameraNode = scnMgr->getSceneNode("camNode");
+    cameraNode->pitch(Degree(speedY * rotationSpeed));
+    cameraNode->yaw(Degree(speedX * rotationSpeed));
 }
 
 int main(int argc, char **argv)
