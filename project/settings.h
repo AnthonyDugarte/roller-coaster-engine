@@ -28,8 +28,11 @@ textures, frames, and fonts.
 #include <OgreTextureManager.h>
 #include <OgreImage.h>
 #include <OgreDataStream.h>
+#include <OgreConfigFile.h>
 #include <fstream>
 #include <iostream>
 
 using namespace Ogre;
 using namespace OgreBites;
+
+std::string resourcesFile = "resources.cfg";

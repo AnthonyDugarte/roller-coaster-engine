@@ -25,19 +25,27 @@ class RollerCoaster:
     public TrayListener         // Needed to manage events in trays (buttons, layers, sliders, ...)
 {
     public:
+        //Basic
         RollerCoaster();
         virtual ~RollerCoaster() {}
-
         void setup();
+
+        //GUI
         void menuGUI();
         void creditsGUI();
+
+        //Interface
         void buttonHit(Button *	button);
+
+        //Tool
+        void loadResource();
         
     private:
         SceneManager* scnMgr;
         TrayManager* mTrayMgr;        
 };
 
+// START BASIC
 RollerCoaster::RollerCoaster() :
     ApplicationContext("Roller Coaster Engine"),
     scnMgr{nullptr},
@@ -84,18 +92,15 @@ void RollerCoaster::setup()
     addInputListener(mTrayMgr);
     mTrayMgr->hideCursor(); // Hide cursor of Ogre
 
-    menuGUI();
+    this->loadResource();
+    this->menuGUI();
 }
 
-//START GUI
+// END BASIC
+
+// START GUI
 void RollerCoaster::menuGUI()
 {
-    //Load texture
-    Ogre::ResourceGroupManager::getSingletonPtr()->createResourceGroup("UserDefinedMaterials");
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation("/home/lewis8a/roller-coaster-engine/project/build/texture", "FileSystem", "UserDefinedMaterials", true);
-	Ogre::ResourceGroupManager::getSingletonPtr()->initialiseResourceGroup("UserDefinedMaterials");
-	Ogre::ResourceGroupManager::getSingletonPtr()->loadResourceGroup("UserDefinedMaterials");
-
     // Create background material
     MaterialPtr material = MaterialManager::getSingleton().create("BackgroundMenu", "General");
     material->getTechnique(0)->getPass(0)->createTextureUnitState("rail2.tga");
@@ -122,7 +127,7 @@ void RollerCoaster::menuGUI()
 
     // Background scrolling
     material->getTechnique(0)->getPass(0)->getTextureUnitState(0)->setScrollAnimation(0.0, 0.25);
-    
+
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.40;
     mTrayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
@@ -130,6 +135,7 @@ void RollerCoaster::menuGUI()
     mTrayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
     mTrayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
 }
+
 void RollerCoaster::creditsGUI()
 {
     // Labels (Position, ID, Value)
@@ -143,7 +149,10 @@ void RollerCoaster::creditsGUI()
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.40;
     mTrayMgr->createButton(TL_CENTER, "ReturnButton", "RETURN", buttonWidth);
 }
-//END GUI
+
+// END GUI
+
+// START INTERFACE
 
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
@@ -159,6 +168,54 @@ void RollerCoaster::buttonHit(Button * button)
     if(button->getCaption() == "EXIT")
         this->closeApp();
 }
+
+// END INTERFACE
+
+// START TOOL
+
+void RollerCoaster::loadResource()
+{
+    try
+    {
+        // Check the file extension
+        if(resourcesFile.substr(resourcesFile.find_last_of(".") + 1) != "cfg")
+            std::cerr << "Error: The file extension is not .cfg" << '\n';
+        else
+        {
+            std::ifstream ifs(resourcesFile.c_str(), std::ios::binary|std::ios::in);
+            // Check the file opening
+            if (ifs.is_open())
+            {
+                Ogre::ConfigFile cf;
+                cf.load(resourcesFile);
+                Ogre::String name, locType;
+                Ogre::ConfigFile::SectionIterator secIt = cf.getSectionIterator();
+                while (secIt.hasMoreElements())
+                {
+                    Ogre::ConfigFile::SettingsMultiMap* settings = secIt.getNext();
+                    Ogre::ConfigFile::SettingsMultiMap::iterator it;
+                    for (it = settings->begin(); it != settings->end(); ++it)
+                    {
+                        locType = it->first;
+                        name = it->second;
+                        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType);
+                    }
+                }
+                Ogre::ResourceGroupManager::getSingletonPtr()->initialiseResourceGroup("General");
+                Ogre::ResourceGroupManager::getSingletonPtr()->loadResourceGroup("General");
+		        ifs.close();
+            }
+            else
+                std::cerr << "Error: The Resource file could not be opened" << '\n';
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error occurred during load resources" << e.what() << '\n';
+    }
+}
+
+// END TOOL
 
 int main(int argc, char **argv)
 {

@@ -10,11 +10,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Resources
 find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
-#configure_file(resources.cfg resources.cfg COPYONLY)
+configure_file(resources.cfg resources.cfg COPYONLY)
 file(COPY model DESTINATION .)
 file(COPY img DESTINATION .)
 file(COPY texture DESTINATION .)
 
 # Executable
-add_executable(RollerCoasterEngine DesignGUI.cpp)
+add_executable(RollerCoasterEngine RollerCoasterEngine.cpp)
 target_link_libraries(RollerCoasterEngine OgreBites)
