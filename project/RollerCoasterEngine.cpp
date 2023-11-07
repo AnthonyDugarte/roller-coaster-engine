@@ -32,7 +32,7 @@ class RollerCoaster:
 
         //GUI
         void menuGUI();
-        void creditsGUI();
+        void creditsGUI(int);
 
         //Interface
         void buttonHit(Button *	button);
@@ -42,14 +42,14 @@ class RollerCoaster:
         
     private:
         SceneManager* scnMgr;
-        TrayManager* mTrayMgr;        
+        TrayManager* trayMgr;        
 };
 
 // START BASIC
 RollerCoaster::RollerCoaster() :
     ApplicationContext("Roller Coaster Engine"),
     scnMgr{nullptr},
-    mTrayMgr{nullptr}
+    trayMgr{nullptr}
 {}
 
 void RollerCoaster::setup()
@@ -88,9 +88,9 @@ void RollerCoaster::setup()
     scnMgr->addRenderQueueListener(getOverlaySystem());
     
     // TrayManager
-    mTrayMgr = new TrayManager("InterfaceRCE", getRenderWindow(), this);
-    addInputListener(mTrayMgr);
-    mTrayMgr->hideCursor(); // Hide cursor of Ogre
+    trayMgr = new TrayManager("InterfaceRCE", getRenderWindow(), this);
+    addInputListener(trayMgr);
+    trayMgr->hideCursor(); // Hide cursor of Ogre
 
     this->loadResource();
     this->menuGUI();
@@ -101,53 +101,91 @@ void RollerCoaster::setup()
 // START GUI
 void RollerCoaster::menuGUI()
 {
-    // Create background material
-    MaterialPtr material = MaterialManager::getSingleton().create("BackgroundMenu", "General");
-    material->getTechnique(0)->getPass(0)->createTextureUnitState("rail2.tga");
-    material->getTechnique(0)->getPass(0)->setDepthCheckEnabled(false);
-    material->getTechnique(0)->getPass(0)->setDepthWriteEnabled(false);
-    material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
+    // Clean
+    this->trayMgr->destroyAllWidgets();
 
-    // Create background rectangle covering the whole screen
-    Rectangle2D* rect = new Rectangle2D(true);
-    rect->setCorners(-1.0, 1.0, 1.0, -1.0);
-    rect->setMaterial(material);
+    Node * background  = 0;  // initialize outside the try/catch block
+    try
+	{
+        // The child background exist
+		background = scnMgr->getRootSceneNode()->getChild("Background"); 
+	}
+	catch (Ogre::Exception e)
+	{
+		// The child background does not exist
+	
+        // Create background material
+        MaterialPtr material = MaterialManager::getSingleton().create("BackgroundMenu", "General");
+        material->getTechnique(0)->getPass(0)->createTextureUnitState("rail2.tga");
+        material->getTechnique(0)->getPass(0)->setDepthCheckEnabled(false);
+        material->getTechnique(0)->getPass(0)->setDepthWriteEnabled(false);
+        material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
 
-    // Render the background before everything else
-    rect->setRenderQueueGroup(RENDER_QUEUE_BACKGROUND);
+        // Create background rectangle covering the whole screen
+        Rectangle2D* rect = new Rectangle2D(true);
+        rect->setCorners(-1.0, 1.0, 1.0, -1.0);
+        rect->setMaterial(material);
 
-    // Use infinite AAB to always stay visible
-    AxisAlignedBox aabInf;
-    aabInf.setInfinite();
-    rect->setBoundingBox(aabInf);
+        // Render the background before everything else
+        rect->setRenderQueueGroup(RENDER_QUEUE_BACKGROUND);
 
-    // Attach background to the scene
-    SceneNode* node = scnMgr->getRootSceneNode()->createChildSceneNode("Background");
-    node->attachObject(rect);
+        // Use infinite AAB to always stay visible
+        AxisAlignedBox aabInf;
+        aabInf.setInfinite();
+        rect->setBoundingBox(aabInf);
 
-    // Background scrolling
-    material->getTechnique(0)->getPass(0)->getTextureUnitState(0)->setScrollAnimation(0.0, 0.25);
+        // Attach background to the scene
+        SceneNode* node = scnMgr->getRootSceneNode()->createChildSceneNode("Background");
+        node->attachObject(rect);
 
+        // Background scrolling
+        material->getTechnique(0)->getPass(0)->getTextureUnitState(0)->setScrollAnimation(0.0, 0.25);
+    }
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.40;
-    mTrayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
-    mTrayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
-    mTrayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
-    mTrayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
+    trayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
+    trayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
+    trayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
+    trayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
 }
 
-void RollerCoaster::creditsGUI()
+void RollerCoaster::creditsGUI(int part)
 {
-    // Labels (Position, ID, Value)
-    float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.80;
-    Label* alejandro = mTrayMgr->createLabel(TL_CENTER, "alejandro", "Alejandro Mujica", labelWidth);
-    Label* anthony = mTrayMgr->createLabel(TL_CENTER, "anthony", "Anthony Dugarte", labelWidth);
-    Label* kevin = mTrayMgr->createLabel(TL_CENTER, "kevin", "Kevin Márquez", labelWidth);
-    Label* lewis = mTrayMgr->createLabel(TL_CENTER, "lewis", "Lewis Ochoa", labelWidth);
+    if(part == 1)
+    {
+        // Clean
+        this->trayMgr->destroyAllWidgets();
 
-    // Buttons (Position, ID, Value)
-    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.40;
-    mTrayMgr->createButton(TL_CENTER, "ReturnButton", "RETURN", buttonWidth);
+        // Labels (Position, ID, Value)
+        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.80;
+        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.30;
+        Label* title = trayMgr->createLabel(TL_CENTER, "title", "CREDITS", labelWidth);
+        
+        //TextBox (Position, ID, caption, width, height
+        TextBox* developers = trayMgr->createTextBox(TL_CENTER, "developers", "DEVELOPERS", labelWidth, labelHeight);
+        // Set the body text
+        developers->appendText("Alejandro Mujica\nAnthony Dugarte\nKevin Marquez");
+        
+        // Buttons (Position, ID, Value)
+        float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+        trayMgr->createButton(TL_CENTER, "NextButtonCredits", "NEXT", buttonWidth);
+    }
+    if(part == 2)
+    {
+        this->trayMgr->destroyWidget("NextButtonCredits");
+        this->trayMgr->destroyWidget("developers");
+
+        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.80;
+        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.30;
+        TextBox* copyright = trayMgr->createTextBox(TL_CENTER, "copyright", "ALKELEAN GAMES", labelWidth, labelHeight);
+
+        //TextBox (Position, ID, caption, width, height
+        copyright->appendText("Universidad de Los Andes\nFaculty Of Engineering\nComputer Graphics\nVenezuela 2023\n\nAll Rights Reserved");
+        
+        // Buttons (Position, ID, Value)
+        float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+        trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
+    }
 }
 
 // END GUI
@@ -162,11 +200,13 @@ void RollerCoaster::buttonHit(Button * button)
     if(button->getCaption() == "SETTINGS")
         this->closeApp();
     if(button->getCaption() == "CREDITS")
-        this->creditsGUI();
-    if(button->getCaption() == "RETURN")
+        this->creditsGUI(1);
+    if(button->getCaption() == "RETURN TO MAIN MENU")
         this->menuGUI();
     if(button->getCaption() == "EXIT")
         this->closeApp();
+    if(button->getCaption() == "NEXT")
+        this->creditsGUI(2);
 }
 
 // END INTERFACE
