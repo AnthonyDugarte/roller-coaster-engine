@@ -32,10 +32,12 @@ class RollerCoaster:
 
         //GUI
         void menuGUI();
+        void settingsGUI();
         void creditsGUI(int);
 
         //Interface
         void buttonHit(Button *	button);
+        void windowResize(int,int);
 
         //Tool
         void loadResource();
@@ -143,11 +145,27 @@ void RollerCoaster::menuGUI()
         material->getTechnique(0)->getPass(0)->getTextureUnitState(0)->setScrollAnimation(0.0, 0.25);
     }
     // Buttons (Position, ID, Value)
-    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.40;
+    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
     trayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
+    trayMgr->showLogo(TL_BOTTOM); // Show Logo of ALKELE GAMES
+}
+
+void RollerCoaster::settingsGUI()
+{
+    this->windowResize(1280,1024);
+
+    // Clean
+    this->trayMgr->destroyAllWidgets();
+
+    float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
+
+    // Buttons (Position, ID, Value)
+    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
 }
 
 void RollerCoaster::creditsGUI(int part)
@@ -158,14 +176,14 @@ void RollerCoaster::creditsGUI(int part)
         this->trayMgr->destroyAllWidgets();
 
         // Labels (Position, ID, Value)
-        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.80;
-        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.30;
+        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
         Label* title = trayMgr->createLabel(TL_CENTER, "title", "CREDITS", labelWidth);
         
         //TextBox (Position, ID, caption, width, height
         TextBox* developers = trayMgr->createTextBox(TL_CENTER, "developers", "DEVELOPERS", labelWidth, labelHeight);
         // Set the body text
-        developers->appendText("Alejandro Mujica\nAnthony Dugarte\nKevin Marquez");
+        developers->appendText("Alejandro Mujica\nAnthony Dugarte\nKevin Marquez\nLewis Ochoa");
         
         // Buttons (Position, ID, Value)
         float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
@@ -176,8 +194,8 @@ void RollerCoaster::creditsGUI(int part)
         this->trayMgr->destroyWidget("NextButtonCredits");
         this->trayMgr->destroyWidget("developers");
 
-        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.80;
-        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.30;
+        float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+        float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
         TextBox* copyright = trayMgr->createTextBox(TL_CENTER, "copyright", "ALKELEAN GAMES", labelWidth, labelHeight);
 
         //TextBox (Position, ID, caption, width, height
@@ -199,7 +217,7 @@ void RollerCoaster::buttonHit(Button * button)
     if(button->getCaption() == "PLAY")
         this->closeApp();
     if(button->getCaption() == "SETTINGS")
-        this->closeApp();
+        this->settingsGUI();
     if(button->getCaption() == "CREDITS")
         this->creditsGUI(1);
     if(button->getCaption() == "RETURN TO MAIN MENU")
@@ -208,6 +226,15 @@ void RollerCoaster::buttonHit(Button * button)
         this->closeApp();
     if(button->getCaption() == "NEXT")
         this->creditsGUI(2);
+}
+
+void RollerCoaster::windowResize(int width, int height)
+{
+    getRenderWindow()->resize(width,height);
+    // Set the aspect ratio for the new size
+    //scnMgr->getCamera("myCam")->setAspectRatio(width / height);
+    // Letting Ogre know the window has been resized
+    //getRenderWindow()->windowMovedOrResized();
 }
 
 // END INTERFACE
