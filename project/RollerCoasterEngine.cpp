@@ -36,6 +36,7 @@ class RollerCoaster:
         void creditsGUI(int);
 
         //Interface
+        void play();
         void buttonHit(Button *	button);
         void sliderMoved(Slider * slider);
         void windowResize(int,int);
@@ -225,11 +226,16 @@ void RollerCoaster::creditsGUI(int part)
 
 // START INTERFACE
 
+void RollerCoaster::play()
+{
+    
+}  
+
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
 {
     if(button->getCaption() == "PLAY")
-        this->closeApp();
+        this->play();
     if(button->getCaption() == "SETTINGS")
         this->settingsGUI();
     if(button->getCaption() == "CREDITS")
@@ -237,7 +243,10 @@ void RollerCoaster::buttonHit(Button * button)
     if(button->getCaption() == "RETURN TO MAIN MENU")
         this->menuGUI();
     if(button->getCaption() == "EXIT")
-        this->closeApp();
+    {
+        delete this->trayMgr;
+        getRoot()->queueEndRendering();
+    }
     if(button->getCaption() == "NEXT")
         this->creditsGUI(2);
 }
