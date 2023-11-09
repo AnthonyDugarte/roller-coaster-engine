@@ -31,8 +31,11 @@ textures, frames, and fonts.
 #include <OgreConfigFile.h>
 #include <fstream>
 #include <iostream>
+#include <random>
 
 using namespace Ogre;
 using namespace OgreBites;
 
 std::string resourcesFile = "resources.cfg";
+std::random_device rd;
+std::mt19937 gen(rd());

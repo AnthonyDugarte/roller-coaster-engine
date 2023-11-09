@@ -39,6 +39,7 @@ class RollerCoaster:
 
         //Tool
         void loadResource();
+        int randomNumber(int,int);
         
     private:
         SceneManager* scnMgr;
@@ -116,7 +117,7 @@ void RollerCoaster::menuGUI()
 	
         // Create background material
         MaterialPtr material = MaterialManager::getSingleton().create("BackgroundMenu", "General");
-        material->getTechnique(0)->getPass(0)->createTextureUnitState("rail2.tga");
+        material->getTechnique(0)->getPass(0)->createTextureUnitState("rail"+std::to_string(this->randomNumber(1,4))+".jpg");
         material->getTechnique(0)->getPass(0)->setDepthCheckEnabled(false);
         material->getTechnique(0)->getPass(0)->setDepthWriteEnabled(false);
         material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
@@ -253,6 +254,12 @@ void RollerCoaster::loadResource()
     {
         std::cerr << "Error occurred during load resources" << e.what() << '\n';
     }
+}
+
+int RollerCoaster::randomNumber(int low, int high)
+{
+    std::uniform_int_distribution<> dist (low,high);
+    return dist(gen);
 }
 
 // END TOOL

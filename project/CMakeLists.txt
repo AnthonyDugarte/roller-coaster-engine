@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 11)
 # Resources
 find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 configure_file(resources.cfg resources.cfg COPYONLY)
+file(COPY zip DESTINATION .)
 file(COPY model DESTINATION .)
 file(COPY img DESTINATION .)
 file(COPY texture DESTINATION .)
