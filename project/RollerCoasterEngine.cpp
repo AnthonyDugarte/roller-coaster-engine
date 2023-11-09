@@ -37,8 +37,9 @@ class RollerCoaster:
 
         //Interface
         void play();
-        void buttonHit(Button *	button);
-        void sliderMoved(Slider * slider);
+        void buttonHit(Button*);
+        void sliderMoved(Slider*);
+        void itemSelected(SelectMenu*);
         void windowResize(int,int);
 
         //Tool
@@ -50,6 +51,8 @@ class RollerCoaster:
         TrayManager* trayMgr;
         int sfxVolume;      
         int musicVolume;
+        int widthApp;
+        int heightApp;
 };
 
 // START BASIC
@@ -58,13 +61,28 @@ RollerCoaster::RollerCoaster() :
     scnMgr{nullptr},
     trayMgr{nullptr},
     sfxVolume{100},
-    musicVolume{100}
+    musicVolume{100},
+    widthApp{800},
+    heightApp{600}
 {}
 
 void RollerCoaster::setup()
 {
-    // Call the base first
-    ApplicationContext::setup();
+    //Hide Button Maximize
+    Ogre::NameValuePairList parms;
+    parms["border"] = "fixed";
+
+    // Initialize root and create window
+    mRoot->initialise(false);
+    createWindow(mAppName,800,600,parms);
+
+    // Locate and load resources
+    locateResources();
+    initialiseRTShaderSystem();
+    loadResources();
+
+    // Adds context as listener to process context-level (above the sample level) events
+    mRoot->addFrameListener(this);
     addInputListener(this);
 
     // Get a pointer to the already created root
@@ -157,7 +175,7 @@ void RollerCoaster::menuGUI()
     trayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOM, 2000); // Show Logo of ALKELEAN GAMES
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
 }
 
 void RollerCoaster::settingsGUI()
@@ -171,7 +189,7 @@ void RollerCoaster::settingsGUI()
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
     
     // Put the caption beside selected item, width must be bigger than box width (Position, ID, Value, width, items, options)
-    trayMgr->createThickSelectMenu(TL_CENTER, "resolution", "Resolution", labelWidth, 4, {"640x480", "800x600", "1024x768", "1152x864", "1280x720", "1280x768", "1280x800", "1280x960", "1280x1024", "1360x764", "1400x1050", "1440x900", "1600x1200", "1680x1050", "1792x1344", "1856x1392", "1920x1080", "1920x1200", "1920x1440", "2560x1440", "2560x1600", "2880x1800", "3840x2160", "3840x2400"});
+    trayMgr->createThickSelectMenu(TL_CENTER, "resolution", "Resolution", labelWidth, 4, {"800x600", "1024x760", "1024x768", "1152x864", "1280x720", "1280x768", "1280x800", "1280x960", "1280x1024", "1360x764", "1400x1050", "1440x900", "1600x1200", "1680x1050", "1792x1344", "1856x1392", "1920x1080", "1920x1200", "1920x1440", "2560x1440", "2560x1600", "2880x1800", "3840x2160", "3840x2400"});
     // Slider (Position, ID, Title, widthText, widthValue, MinValue, MaxValue, Division+1)
     OgreBites::Slider *sfx = trayMgr->createThickSlider(TL_CENTER, "effects", "SFX Volume", labelWidth, 50, 0, 100, 101);
     OgreBites::Slider *music = trayMgr->createThickSlider(TL_CENTER, "music", "Music Volume", labelWidth, 50, 0, 100, 101);
@@ -180,7 +198,7 @@ void RollerCoaster::settingsGUI()
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOM, 2000); // Show Logo of ALKELEAN GAMES
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
 }
 
 void RollerCoaster::creditsGUI(int part)
@@ -226,10 +244,7 @@ void RollerCoaster::creditsGUI(int part)
 
 // START INTERFACE
 
-void RollerCoaster::play()
-{
-    
-}  
+void RollerCoaster::play(){}  
 
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
@@ -260,12 +275,25 @@ void RollerCoaster::sliderMoved(Slider * slider)
         this->musicVolume = slider->getValue();
 }
 
+// Override from TrayListener to manage slide events
+void RollerCoaster::itemSelected(SelectMenu *menu)
+{
+    if (menu->getName().compare("resolution") == 0)
+    {
+        std::string resolution = menu->getSelectedItem();
+        this->widthApp = std::stoi(resolution.substr(0,resolution.find_last_of("x")));
+        this->heightApp = std::stoi(resolution.substr(resolution.find_last_of("x") + 1));
+        this->windowResize(widthApp,heightApp);
+    }
+}
+
 void RollerCoaster::windowResize(int width, int height)
 {
     getRenderWindow()->resize(width,height);
     // Set the aspect ratio for the new size
-    //scnMgr->getCamera("myCam")->setAspectRatio(width / height);
+    scnMgr->getCamera("myCam")->setAspectRatio(width / height);
     // Letting Ogre know the window has been resized
+    this->windowResized(getRenderWindow());
     //getRenderWindow()->windowMovedOrResized();
 }
 
