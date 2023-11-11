@@ -16,6 +16,12 @@ file(COPY model DESTINATION .)
 file(COPY img DESTINATION .)
 file(COPY texture DESTINATION .)
 
+
 # Executable
-add_executable(RollerCoasterEngine RollerCoasterEngine.cpp)
-target_link_libraries(RollerCoasterEngine OgreBites)
+add_executable(RollerCoasterEngine RollerCoasterEngine.cpp )
+target_link_libraries(
+RollerCoasterEngine 
+OgreBites
+${OIS_LIBRARIES}
+${OGRE_Overlay_LIBRARIES}
+${OGRE_Terrain_LIBRARIES})

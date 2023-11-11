@@ -25,34 +25,52 @@ class RollerCoaster:
     public TrayListener         // Needed to manage events in trays (buttons, layers, sliders, ...)
 {
     public:
-        //Basic
+        // Basic
         RollerCoaster();
         virtual ~RollerCoaster() {}
         void setup();
 
-        //GUI
+        // GUI
         void menuGUI();
         void settingsGUI();
         void creditsGUI(int);
 
-        //Interface
+        // Interface
         void play();
         void buttonHit(Button*);
         void sliderMoved(Slider*);
         void itemSelected(SelectMenu*);
         void windowResize(int,int);
 
-        //Tool
+        // Tool
         void loadResource();
         int randomNumber(int,int);
-        
+
+    protected:
+        // Terrain
+        virtual void createScene();
+        virtual void createFrameListener();
+        virtual void destroyScene();
+        //virtual bool frameRenderingQueued(const Ogre::FrameEvent& fe);
+
     private:
+        // Terrain
+        void defineTerrain(long, long);
+        void initBlendMaps(Ogre::Terrain*);
+        void configureTerrainDefaults(Ogre::Light*);
+
+        // Basic
         SceneManager* scnMgr;
         TrayManager* trayMgr;
-        int sfxVolume;      
-        int musicVolume;
         int widthApp;
         int heightApp;
+        int sfxVolume;      
+        int musicVolume;
+
+        // Terrain
+        bool mTerrainsImported;
+        Ogre::TerrainGroup* mTerrainGroup;
+        Ogre::TerrainGlobalOptions* mTerrainGlobals;
 };
 
 // START BASIC
@@ -63,7 +81,9 @@ RollerCoaster::RollerCoaster() :
     sfxVolume{100},
     musicVolume{100},
     widthApp{800},
-    heightApp{600}
+    heightApp{600},
+    mTerrainGroup{0},
+    mTerrainGlobals{0}
 {}
 
 void RollerCoaster::setup()
@@ -74,7 +94,7 @@ void RollerCoaster::setup()
 
     // Initialize root and create window
     mRoot->initialise(false);
-    createWindow(mAppName,800,600,parms);
+    createWindow(mAppName,this->widthApp,this->heightApp,parms);
 
     // Locate and load resources
     locateResources();
@@ -211,7 +231,7 @@ void RollerCoaster::creditsGUI(int part)
         // Labels (Position, ID, Value)
         float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
         float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
-        Label* title = trayMgr->createLabel(TL_CENTER, "title", "CREDITS", labelWidth);
+        Label* titleCredits = trayMgr->createLabel(TL_CENTER, "titleCredits", "CREDITS", labelWidth);
         
         //TextBox (Position, ID, caption, width, height
         TextBox* developers = trayMgr->createTextBox(TL_CENTER, "developers", "DEVELOPERS", labelWidth, labelHeight);
@@ -244,7 +264,37 @@ void RollerCoaster::creditsGUI(int part)
 
 // START INTERFACE
 
-void RollerCoaster::play(){}  
+void RollerCoaster::play()
+{
+    // Clean
+    this->scnMgr->destroySceneNode("Background");
+    this->trayMgr->destroyAllWidgets();
+
+    // Create terrain
+    this->createScene();
+
+    while(mTerrainGroup->isDerivedDataUpdateInProgress())
+    {
+        std::cout<<"Building terrain...\n";
+        // we need to wait for this to finish
+        OGRE_THREAD_SLEEP(100);
+        Root::getSingleton().getWorkQueue()->processResponses();
+    }
+
+    // Labels (Position, ID, Value)
+    float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
+    Label* titlePlay = trayMgr->createLabel(TL_CENTER, "titlePlay", "ROLLER COASTER ENGINE", labelWidth);
+    
+    //TextBox (Position, ID, caption, width, height
+    TextBox* welcome = trayMgr->createTextBox(TL_CENTER, "welcome", "WELCOME", labelWidth, labelHeight);
+    // Set the body text
+    welcome->appendText("Welcome to the exciting world of roller coaster building! Get ready to design and build the most incredible and exciting roller coasters you have ever imagined. Defy gravity, create dizzying spins and thrilling drops as you build your own roller coaster. Have fun and enjoy the ride!");
+    
+    // Buttons (Position, ID, Value)
+    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    trayMgr->createButton(TL_CENTER, "OkButtonPlay", "OK", buttonWidth);
+}  
 
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
@@ -264,6 +314,8 @@ void RollerCoaster::buttonHit(Button * button)
     }
     if(button->getCaption() == "NEXT")
         this->creditsGUI(2);
+     if(button->getCaption() == "OK")
+        this->trayMgr->destroyAllWidgets();
 }
 
 // Override from TrayListener to manage slide events
@@ -317,17 +369,11 @@ void RollerCoaster::loadResource()
                 Ogre::ConfigFile cf;
                 cf.load(resourcesFile);
                 Ogre::String name, locType;
-                Ogre::ConfigFile::SectionIterator secIt = cf.getSectionIterator();
-                while (secIt.hasMoreElements())
+                for (const auto& ti : cf.getSettings())
                 {
-                    Ogre::ConfigFile::SettingsMultiMap* settings = secIt.getNext();
-                    Ogre::ConfigFile::SettingsMultiMap::iterator it;
-                    for (it = settings->begin(); it != settings->end(); ++it)
-                    {
-                        locType = it->first;
-                        name = it->second;
-                        Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType);
-                    }
+                    locType = ti.first; 
+                    name = ti.second;
+                    Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType);
                 }
                 Ogre::ResourceGroupManager::getSingletonPtr()->initialiseResourceGroup("General");
                 Ogre::ResourceGroupManager::getSingletonPtr()->loadResourceGroup("General");
@@ -350,6 +396,217 @@ int RollerCoaster::randomNumber(int low, int high)
 }
 
 // END TOOL
+
+// START TERRAIN
+
+void RollerCoaster::createScene()
+{
+    // Setting Up the Camera
+    SceneNode* camNode = scnMgr->getRootSceneNode()->createChildSceneNode("camNode2");
+    Camera* cam = scnMgr->createCamera("myCam2");
+    camNode->setPosition(Ogre::Vector3(1683, 50, 2116));
+    camNode->lookAt(Ogre::Vector3(1963, 50, 1660), Node::TS_PARENT);
+    cam->setNearClipDistance(0.1);
+
+    // Check to see if our current render system has the capability to handle an infinite far clip distance. 
+    //If it does, then we set the far clip distance to zero (which means no far clipping). 
+    //If it does not, then we simply set the distance really high so we can see distant terrain. 
+    bool infiniteClip = mRoot->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_INFINITE_FAR_PLANE);
+    
+    if (infiniteClip)
+        cam->setFarClipDistance(0);
+    else
+        cam->setFarClipDistance(50000);
+    
+    // Setting Up a Light for Our Terrain
+    scnMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
+    
+    // Directional Light
+    Ogre::Light* light = scnMgr->createLight("TestLight");
+    light->setType(Ogre::Light::LT_DIRECTIONAL);
+    light->setDiffuseColour(Ogre::ColourValue::White);
+    light->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
+
+    // The normalise method will make the vector's length equal to one while maintaining its direction
+    Ogre::SceneNode* ln = scnMgr->getRootSceneNode()->createChildSceneNode();
+    ln->setDirection(Vector3(0.55, -0.3, 0.75).normalisedCopy());
+    ln->attachObject(light);
+
+    // This is a class that holds information for all of the terrains we might create 
+    mTerrainGlobals = new Ogre::TerrainGlobalOptions();
+
+    // The TerrainGroup constructor takes the SceneManager as its first parameter 
+    // It then takes an alignment option, terrain size, and terrain world size
+    // The setFilenameConvention allows us to choose how our terrain will be saved
+    // Finally, we set the origin to be used for our terrain
+    mTerrainGroup = new Ogre::TerrainGroup(scnMgr, Ogre::Terrain::ALIGN_X_Z, 513, 12000.0);
+    mTerrainGroup->setFilenameConvention(Ogre::String("terrain"), Ogre::String("dat"));
+    mTerrainGroup->setOrigin(Ogre::Vector3::ZERO);
+
+    this->configureTerrainDefaults(light);
+
+    for(long x = 0; x <= 0; ++x)
+        for(long y = 0; y <= 0; ++y)
+            defineTerrain(x, y);
+    // Define our terrains and ask the TerrainGroup to load them all
+    mTerrainGroup->loadAllTerrains(true);
+
+    // Initialize the blend maps for our terrain
+    if (mTerrainsImported)
+    {
+        for (const auto& ti : mTerrainGroup->getTerrainSlots())
+        {
+            initBlendMaps(ti.second->instance);
+        }
+    }
+    // Cleanup any temporary resources that were created while configuring our terrain
+    mTerrainGroup->freeTemporaryResources();
+}
+
+void RollerCoaster::createFrameListener()
+{
+}
+
+// We must make sure to call OGRE_DELETE for every time we called OGRE_NEW
+void RollerCoaster::destroyScene()
+{
+    delete mTerrainGroup;
+    delete mTerrainGlobals;
+}
+
+/*
+bool RollerCoaster::frameRenderingQueued(const Ogre::FrameEvent& fe)
+{
+    if (mTerrainGroup->isDerivedDataUpdateInProgress())
+    {
+        if (mTerrainsImported)
+            std::cout<<"Building terrain...\n";
+        else
+            std::cout<<"Updating textures, patience...\n";
+    }
+    else
+    {
+        if (mTerrainsImported)
+        {
+            // FIXME does not end up in the correct resource group
+            // saveTerrains(true);
+            mTerrainsImported = false;
+        }
+    }
+    return 1;
+}
+*/
+
+void getTerrainImage(bool flipX, bool flipY, Ogre::Image& img)
+{
+    // This will load our 'terrain.png' resource.
+    img.load("terrain.png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+   
+    // Flipping is used to create seamless terrain so that unlimited terrain can be created using a single heightmap
+    if (flipX)
+        img.flipAroundY();
+    if (flipY)
+        img.flipAroundX();
+}
+
+void RollerCoaster::defineTerrain(long x, long y)
+{
+    // Ask the TerrainGroup to define a unique filename for this Terrain.
+    Ogre::String filename = mTerrainGroup->generateFilename(x, y);
+    // Check to see if a filename for this grid location has already been generated
+    bool exists = Ogre::ResourceGroupManager::getSingleton().resourceExists( mTerrainGroup->getResourceGroup(), filename);
+    
+    //If it has already been generated, then we can call TerrainGroup::defineTerrain method to set up this grid location with the previously generated filename automatically. 
+    if (exists)
+        mTerrainGroup->defineTerrain(x, y);
+    else //If it has not been generated, then we generate an image with getTerrainImage and then call a different overload of TerrainGroup::defineTerrain that takes a reference to our generated image. Finally, we set the mTerrainsImported flag to true. 
+    {
+        Ogre::Image img;
+        getTerrainImage(x % 2 != 0, y % 2 != 0, img);
+        mTerrainGroup->defineTerrain(x, y, &img);
+        mTerrainsImported = true;
+    }
+}
+
+// This method will blend together the different layers we defined in configureTerrainDefaults
+void RollerCoaster::initBlendMaps(Ogre::Terrain* terrain)
+{
+    Ogre::Real minHeight0 = 70;
+    Ogre::Real fadeDist0 = 40;
+    Ogre::Real minHeight1 = 70;
+    Ogre::Real fadeDist1 = 15;
+    Ogre::TerrainLayerBlendMap* blendMap0 = terrain->getLayerBlendMap(1);
+    Ogre::TerrainLayerBlendMap* blendMap1 = terrain->getLayerBlendMap(2);
+    float* pBlend0 = blendMap0->getBlendPointer();
+    float* pBlend1 = blendMap1->getBlendPointer();
+
+    for (Ogre::uint16 y = 0; y < terrain->getLayerBlendMapSize(); ++y)
+    {
+        for (Ogre::uint16 x = 0; x < terrain->getLayerBlendMapSize(); ++x)
+        {
+            Ogre::Real tx, ty;
+            blendMap0->convertImageToTerrainSpace(x, y, &tx, &ty);
+            Ogre::Real height = terrain->getHeightAtTerrainPosition(tx, ty);
+            Ogre::Real val = (height - minHeight0) / fadeDist0;
+            val = Ogre::Math::Clamp(val, (Ogre::Real)0, (Ogre::Real)1);
+            *pBlend0++ = val;
+            val = (height - minHeight1) / fadeDist1;
+            val = Ogre::Math::Clamp(val, (Ogre::Real)0, (Ogre::Real)1);
+            *pBlend1++ = val;
+        }
+    }
+
+    blendMap0->dirty();
+    blendMap1->dirty();
+    blendMap0->update();
+    blendMap1->update();
+}
+
+void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
+{
+    // sets the largest error in pixels allowed between our ideal terrain and the mesh that is created to render it. 
+    // A smaller number will mean a more accurate terrain, because it will require more vertices to reduce the error
+    mTerrainGlobals->setMaxPixelError(8);
+    
+    // determines the distance at which Ogre will still apply our lightmap. 
+    // If you increase this, then you will see Ogre apply lighting effects out to a farther distance. 
+    mTerrainGlobals->setCompositeMapDistance(3000);
+
+    // Pass our lighting information to our terrain
+    mTerrainGlobals->setLightMapDirection(light->getDerivedDirection()); // Apply any transforms that are applied to our Light's direction by any SceneNode it may be attached to
+    mTerrainGlobals->setCompositeMapAmbient(scnMgr->getAmbientLight()); // Set the ambient light
+    mTerrainGlobals->setCompositeMapDiffuse(light->getDiffuseColour()); // Diffuse color for our terrain to match our scene lighting
+
+    // Get a reference to the import settings of our TerrainGroup and set some basic values
+    Ogre::Terrain::ImportData& importData = mTerrainGroup->getDefaultImportSettings();
+    importData.terrainSize = 513;
+    importData.worldSize = 12000.0;
+    importData.inputScale = 600;
+    importData.minBatchSize = 33;
+    importData.maxBatchSize = 65;
+
+    // This way you save storage space and speed up loading
+    // However if you want more flexibility, you can also make Ogre combine the images at loading accordingly as shown below
+    Image combined;
+    combined.loadTwoImagesAsRGBA("Ground23_col.jpg", "Ground23_spec.png", "General");
+    TextureManager::getSingleton().loadImage("Ground23_diffspec", "General", combined);
+
+    // Texture
+    // The texture's worldSize determines how big each splat of texture is going to be when applied to the terrain. 
+    // A smaller value will increase the resolution of the rendered texture layer because each piece will be stretched less to fill in the terrain. 
+    importData.layerList.resize(3);
+    importData.layerList[0].worldSize = 200;
+    importData.layerList[0].textureNames.push_back("Ground37_diffspec.dds");
+    importData.layerList[0].textureNames.push_back("Ground37_normheight.dds");
+    importData.layerList[1].worldSize = 200;
+    importData.layerList[1].textureNames.push_back("Ground23_diffspec");
+    importData.layerList[1].textureNames.push_back("Ground23_normheight.dds");
+    importData.layerList[2].worldSize = 400;
+    importData.layerList[2].textureNames.push_back("Rock20_diffspec.dds");
+    importData.layerList[2].textureNames.push_back("Rock20_diffspec.dds");
+}
+
+// END TERRAIN
 
 int main(int argc, char **argv)
 {

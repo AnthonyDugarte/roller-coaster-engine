@@ -32,6 +32,8 @@ textures, frames, and fonts.
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <Terrain/OgreTerrain.h>
+#include <Terrain/OgreTerrainGroup.h>
 
 using namespace Ogre;
 using namespace OgreBites;
