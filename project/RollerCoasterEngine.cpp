@@ -127,8 +127,19 @@ void RollerCoaster::setup()
     cam->setNearClipDistance(5);
     cam->setAutoAspectRatio(true);
     camNode->attachObject(cam);
-    camNode->setPosition(0, 0, 50);
-    camNode->lookAt(Ogre::Vector3(0, 0, -1), Node::TS_PARENT);
+    cam->setNearClipDistance(0.1);
+    camNode->setPosition(Ogre::Vector3(1683, 50, 2116));
+    camNode->lookAt(Ogre::Vector3(1963, 50, 1660), Node::TS_PARENT);
+
+    // Check to see if our current render system has the capability to handle an infinite far clip distance. 
+    //If it does, then we set the far clip distance to zero (which means no far clipping). 
+    //If it does not, then we simply set the distance really high so we can see distant terrain. 
+    bool infiniteClip = mRoot->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_INFINITE_FAR_PLANE);
+    
+    if (infiniteClip)
+        cam->setFarClipDistance(0);
+    else
+        cam->setFarClipDistance(50000);
     
     // Add camera to viewport
     getRenderWindow()->addViewport(cam);
@@ -277,7 +288,7 @@ void RollerCoaster::play()
     {
         std::cout<<"Building terrain...\n";
         // we need to wait for this to finish
-        OGRE_THREAD_SLEEP(100);
+        OGRE_THREAD_SLEEP(1000);
         Root::getSingleton().getWorkQueue()->processResponses();
     }
 
@@ -401,23 +412,6 @@ int RollerCoaster::randomNumber(int low, int high)
 
 void RollerCoaster::createScene()
 {
-    // Setting Up the Camera
-    SceneNode* camNode = scnMgr->getRootSceneNode()->createChildSceneNode("camNode2");
-    Camera* cam = scnMgr->createCamera("myCam2");
-    camNode->setPosition(Ogre::Vector3(1683, 50, 2116));
-    camNode->lookAt(Ogre::Vector3(1963, 50, 1660), Node::TS_PARENT);
-    cam->setNearClipDistance(0.1);
-
-    // Check to see if our current render system has the capability to handle an infinite far clip distance. 
-    //If it does, then we set the far clip distance to zero (which means no far clipping). 
-    //If it does not, then we simply set the distance really high so we can see distant terrain. 
-    bool infiniteClip = mRoot->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_INFINITE_FAR_PLANE);
-    
-    if (infiniteClip)
-        cam->setFarClipDistance(0);
-    else
-        cam->setFarClipDistance(50000);
-    
     // Setting Up a Light for Our Terrain
     scnMgr->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
     
