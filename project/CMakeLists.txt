@@ -15,12 +15,12 @@ file(COPY zip DESTINATION .)
 file(COPY model DESTINATION .)
 file(COPY img DESTINATION .)
 file(COPY texture DESTINATION .)
-
+file(COPY cubemaps DESTINATION .)
 
 # Executable
-add_executable(RollerCoasterEngine RollerCoasterEngine.cpp )
+add_executable(${PROJECT_NAME} RollerCoasterEngine.cpp)
 target_link_libraries(
-RollerCoasterEngine 
+${PROJECT_NAME}
 OgreBites
 ${OIS_LIBRARIES}
 ${OGRE_Overlay_LIBRARIES}

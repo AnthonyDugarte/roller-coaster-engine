@@ -41,6 +41,12 @@ class RollerCoaster:
         void sliderMoved(Slider*);
         void itemSelected(SelectMenu*);
         void windowResize(int,int);
+        bool mouseWheelRolled(const MouseWheelEvent &);
+        bool mousePressed(const MouseButtonEvent &);
+        bool mouseReleased(const MouseButtonEvent &);
+        bool mouseMoved(const MouseMotionEvent &);
+        bool keyPressed(const KeyboardEvent &);
+        std::vector<std::pair<SceneNode*, Vector3>> get_intersections(SceneNode *, Ray &);
 
         // Tool
         void loadResource();
@@ -59,13 +65,28 @@ class RollerCoaster:
         void initBlendMaps(Ogre::Terrain*);
         void configureTerrainDefaults(Ogre::Light*);
 
+        // Interface
+        void rotateScene(int , int ) noexcept;
+        void resetHighlightedNode(void) noexcept;
+        void setHighlightedNode(SceneNode* node) noexcept;
+        void get_intersections(SceneNode *, Ray &, std::map<Real, SceneNode*>&);
+
         // Basic
         SceneManager* scnMgr;
         TrayManager* trayMgr;
+        RaySceneQuery* mRayScnQuery;
         int widthApp;
         int heightApp;
         int sfxVolume;      
         int musicVolume;
+
+        // Interface
+        bool worldWasClicked;
+        bool mMovableFound;
+        const float rotationSpeed;
+        MovementAxis moveAxis;
+        std::pair<SceneNode*, Vector3> intersectedNode;
+        SceneNode* highlightedNode;
 
         // Terrain
         bool mTerrainsImported;
@@ -83,7 +104,14 @@ RollerCoaster::RollerCoaster() :
     widthApp{800},
     heightApp{600},
     mTerrainGroup{0},
-    mTerrainGlobals{0}
+    mTerrainGlobals{0},
+    worldWasClicked{false},
+    mMovableFound{false},
+    rotationSpeed{0.5f},
+    intersectedNode{std::make_pair<SceneNode*, Vector3>(nullptr, Vector3())},
+    moveAxis{MovementAxis::none},
+    highlightedNode{nullptr},
+    mRayScnQuery{0}
 {}
 
 void RollerCoaster::setup()
@@ -162,14 +190,9 @@ void RollerCoaster::menuGUI()
     // Clean
     this->trayMgr->destroyAllWidgets();
 
-    Node * background  = 0;  // initialize outside the try/catch block
-    try
-	{
-        // The child background exist
-		background = scnMgr->getRootSceneNode()->getChild("Background"); 
-	}
-	catch (Ogre::Exception e)
-	{
+    SceneNode * background  = nullptr;
+    if (not scnMgr->hasSceneNode("Background"))
+    {    
 		// The child background does not exist
 	
         // Create background material
@@ -198,6 +221,10 @@ void RollerCoaster::menuGUI()
 
         // Background scrolling
         material->getTechnique(0)->getPass(0)->getTextureUnitState(0)->setScrollAnimation(0.0, 0.25);
+    }
+    else
+    {    
+        background = scnMgr->getSceneNode("Background");
     }
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
     // Buttons (Position, ID, Value)
@@ -281,6 +308,18 @@ void RollerCoaster::play()
     this->scnMgr->destroySceneNode("Background");
     this->trayMgr->destroyAllWidgets();
 
+    //Skybox
+    scnMgr->setSkyBox(true, "Examples/MorningSkyBox");
+    RTShader::ShaderGenerator* shadergen = RTShader::ShaderGenerator::getSingletonPtr();
+    shadergen->addSceneManager(scnMgr);
+    scnMgr->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
+
+    // Ogro
+    SceneNode* ogreNode1 = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreNode1");
+    Entity* ogreEntity1 = scnMgr->createEntity("Suzanne.mesh");
+    ogreNode1->attachObject(ogreEntity1);
+    ogreNode1->setPosition(1683, 50, 2110);
+
     // Create terrain
     this->createScene();
 
@@ -360,6 +399,292 @@ void RollerCoaster::windowResize(int width, int height)
     //getRenderWindow()->windowMovedOrResized();
 }
 
+// Handle mouse wheel events (Zoom in or Zoom out)
+bool RollerCoaster::mouseWheelRolled(const MouseWheelEvent &evt) // Zoom in/out
+{
+    auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
+    auto cameraNode {scnMgr->getSceneNode("camNode")};
+    cameraNode->translate(evt.y * direction * 1.5);
+
+    return true;
+}
+
+// Handle click events (Save click position)
+bool RollerCoaster::mousePressed(const MouseButtonEvent &evt)
+{
+    Camera* myCam {scnMgr->getCamera("myCam")};
+    
+    Ray mouseRay {
+        myCam->getCameraToViewportRay(
+            evt.x / float(myCam->getViewport()->getActualWidth()),
+            evt.y / float(myCam->getViewport()->getActualHeight())
+            )
+        };
+
+    std::vector<std::pair<SceneNode*, Vector3>> result {get_intersections(scnMgr->getSceneNode("worldNode"), mouseRay)};
+    // node -> node2, node3
+    // root -> node, camara
+    if (not result.empty()) // Have colisions
+    {
+        // Save nereast intersected node and point intersection
+        intersectedNode.first = result[0].first;
+        intersectedNode.second = result[0].second;
+        
+        setHighlightedNode(result[0].first);
+        
+        mMovableFound = true; // Flag to mark a selection
+    }
+    else // Click over world
+    {
+        worldWasClicked = true;
+    }   
+    
+    return true;
+}
+
+// Handle realese events (Save realese position)
+bool RollerCoaster::mouseReleased(const MouseButtonEvent &evt)
+{   
+    resetHighlightedNode();
+    worldWasClicked = false;
+    return true;
+}	
+
+// Handle mouse movement events (Rotation direction, or move a node)
+bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
+{    
+    // evt: type, windowID, x, y, xrel, yrel
+    Camera* myCam {scnMgr->getCamera("myCam")};
+    
+    Ray mouseRay {
+        myCam->getCameraToViewportRay(
+            evt.x / float(myCam->getViewport()->getActualWidth()),
+            evt.y / float(myCam->getViewport()->getActualHeight())
+            )
+        };
+
+    
+    if (worldWasClicked) // Rotate scene
+    {    
+        rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+    }
+    
+    return true;
+}
+
+// Handle keyboard events (Translate or rotate camera)
+bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
+{
+    if (evt.keysym.sym == SDLK_ESCAPE) // Press Esc
+    {
+        getRoot()->queueEndRendering();
+    }
+    else if (evt.keysym.sym == SDLK_UP) // Up arrow : rotate x+ camera
+    {
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->pitch(Degree(5));
+    }
+    else if (evt.keysym.sym == SDLK_DOWN) // Down arrow : rotate x- camera
+    {
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->pitch(Degree(-5));
+    }
+    else if (evt.keysym.sym == SDLK_LEFT) // Left arrow : rotate y- camera
+    {
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->yaw(Degree(5));
+    }
+    else if (evt.keysym.sym == SDLK_RIGHT) // Right arrow : rotate y+ camera
+    {
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->yaw(Degree(-5));
+    }
+    else if (evt.keysym.sym == 119) // Key "w" : move up camera
+    {
+        auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
+        if (highlightedNode != nullptr)
+        {
+            highlightedNode->translate(direction * 3.5);
+        }
+        auto cameraNode {scnMgr->getSceneNode("camNode")};
+        cameraNode->translate(direction * 3.5);
+    }
+    else if (evt.keysym.sym == 115) //Key "s" : move down camera
+    {
+        auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
+        if (highlightedNode != nullptr)
+        {
+            highlightedNode->translate(-direction * 3.5);
+        }
+        auto cameraNode {scnMgr->getSceneNode("camNode")};
+        cameraNode->translate(-direction * 3.5);
+    }
+    
+    else if (evt.keysym.sym == 97) // Key "a" : move left camera
+    {
+        auto direction = scnMgr->getCamera("myCam")->getRealRight();
+        if (highlightedNode != nullptr)
+        {
+            highlightedNode->translate(-direction * 3.5);
+        }
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->translate(-direction * 3.5);
+    }
+    else if (evt.keysym.sym == 100) // Key "d" : move right camera
+    {
+        auto direction = scnMgr->getCamera("myCam")->getRealRight();
+        if (highlightedNode != nullptr)
+        {
+            highlightedNode->translate(direction * 3.5);
+        }
+        auto cameraNode = scnMgr->getSceneNode("camNode");
+        cameraNode->translate(direction * 3.5);
+    }
+    
+    return true;
+}
+
+void RollerCoaster::setHighlightedNode(SceneNode* node) noexcept
+{
+    if (highlightedNode == nullptr)
+    {
+        highlightedNode = node;
+        highlightedNode->showBoundingBox(true);
+    }
+    else
+    {
+        if (highlightedNode != node)
+        {
+            highlightedNode->showBoundingBox(false);
+            
+            highlightedNode = node;
+            highlightedNode->showBoundingBox(true);
+        }
+    }
+}
+
+// Apply a rotation based on mouse speed
+void RollerCoaster::rotateScene(int speedX, int speedY) noexcept
+{
+    // Moving camNode to TempNode
+    SceneNode* camNode {scnMgr->getSceneNode("camNode")};
+    SceneNode* fatherCamera {camNode->getParentSceneNode()};
+
+    SceneNode* tempNode;
+    if (not scnMgr->hasSceneNode("tempNode"))
+    {    
+        tempNode = fatherCamera->createChildSceneNode("tempNode", camNode->getPosition(), camNode->getOrientation());
+    }
+    else
+    {    
+        tempNode = scnMgr->getSceneNode("tempNode");
+    }
+    
+    
+    Vector3 resultPosition = tempNode->convertWorldToLocalPosition(camNode->getPosition());
+    Quaternion resultOrientation = tempNode->convertWorldToLocalOrientation(camNode->getOrientation());
+
+    fatherCamera->removeChild(camNode);
+    tempNode->addChild(camNode);
+    camNode->setPosition(resultPosition);
+    camNode->setOrientation(resultOrientation);
+    camNode->setInheritScale(false);
+    
+    // Moving highlightedNode to TempNode
+    SceneNode* fatherhighlightedNode {highlightedNode->getParentSceneNode()};
+    
+    Vector3 resultPosition2 = tempNode->convertWorldToLocalPosition(highlightedNode->getPosition());
+    Quaternion resultOrientation2 = tempNode->convertWorldToLocalOrientation(highlightedNode->getOrientation());
+
+    fatherhighlightedNode->removeChild(highlightedNode);
+    tempNode->addChild(highlightedNode);
+    highlightedNode->setPosition(resultPosition2);
+    highlightedNode->setOrientation(resultOrientation2);
+    highlightedNode->setInheritScale(false);
+    
+    
+    if (highlightedNode != nullptr)
+    {        
+        tempNode->yaw(Degree(speedX * 0.0001));
+        tempNode->pitch(Degree(speedY * 0.0001));
+    }
+    
+    // Back camNode
+    resultPosition = fatherCamera->convertWorldToLocalPosition(camNode->getPosition());
+    resultOrientation = fatherCamera->convertWorldToLocalOrientation(camNode->getOrientation());
+
+    tempNode->removeChild(camNode);
+    fatherCamera->addChild(camNode);
+    camNode->setPosition(resultPosition);
+    camNode->setOrientation(resultOrientation);
+    camNode->setInheritScale(false);
+    
+    // Back highlightedNode
+    resultPosition2 = fatherhighlightedNode->convertWorldToLocalPosition(highlightedNode->getPosition());
+    resultOrientation2 = fatherhighlightedNode->convertWorldToLocalOrientation(highlightedNode->getOrientation());
+
+    tempNode->removeChild(highlightedNode);
+    fatherhighlightedNode->addChild(highlightedNode);
+    highlightedNode->setPosition(resultPosition2);
+    highlightedNode->setOrientation(resultOrientation2);
+    highlightedNode->setInheritScale(false);
+}
+
+void RollerCoaster::resetHighlightedNode(void) noexcept
+{
+    if (highlightedNode != nullptr)
+    {    
+        highlightedNode->showBoundingBox(false);
+        highlightedNode = nullptr;
+    }
+}
+
+// wrapper to recursive get_intersections
+// SceneNode: Node intersected, Vector3: collision point 
+std::vector<std::pair<SceneNode*, Vector3>> RollerCoaster::get_intersections(SceneNode * node, Ray & ray)
+{
+    std::map<Real, SceneNode*> matchs; // Intersections ordered by distance
+    std::vector<std::pair<SceneNode*, Vector3>> intersections; // Intersections ordered by distance with point intersection
+    
+    get_intersections(node, ray, matchs); // Get all matchs
+    // Transform map<Distance, SceneNode*> to vector<pair<SceneNode*, Vector3>>
+    for (std::pair<Real, SceneNode*> match : matchs)
+    {
+        intersections.emplace_back(match.second, ray.getPoint(match.first));
+    }
+    
+    return intersections;
+}
+
+void RollerCoaster::get_intersections(SceneNode* node, Ray& ray, std::map<Real, SceneNode*>& matchs)
+{
+    std::vector<Node*> childs {node->getChildren()};
+    // Deep First Search
+    if (childs.size() > 0) // Not a leave
+    {
+        for (Node* child : childs)
+        {
+            SceneNode* n {scnMgr->getSceneNode(child->getName())};
+            get_intersections(n, ray, matchs);
+        }
+    }
+    else // Find a leave
+    {
+        SceneNode* camNode {scnMgr->getSceneNode("camNode")};
+        RayTestResult rTR {ray.intersects(node->_getWorldAABB())};
+        // Generate a map<Distance, SceneNode*> with intersections ordered by distance
+        if (rTR.first and camNode != node) // Intersection
+        {
+            matchs.emplace(rTR.second, node);
+        }
+    }
+}
+
+/*
+// Find all intersected nodes
+
+
+*/
 // END INTERFACE
 
 // START TOOL

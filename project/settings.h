@@ -29,11 +29,13 @@ textures, frames, and fonts.
 #include <OgreImage.h>
 #include <OgreDataStream.h>
 #include <OgreConfigFile.h>
+#include <Terrain/OgreTerrain.h>
+#include <Terrain/OgreTerrainGroup.h>
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <Terrain/OgreTerrain.h>
-#include <Terrain/OgreTerrainGroup.h>
+#include <map>
+#include <memory>
 
 using namespace Ogre;
 using namespace OgreBites;
@@ -41,3 +43,4 @@ using namespace OgreBites;
 std::string resourcesFile = "resources.cfg";
 std::random_device rd;
 std::mt19937 gen(rd());
+enum class MovementAxis { x, y, z, none };
