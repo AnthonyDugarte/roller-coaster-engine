@@ -31,6 +31,7 @@ textures, frames, and fonts.
 #include <OgreConfigFile.h>
 #include <Terrain/OgreTerrain.h>
 #include <Terrain/OgreTerrainGroup.h>
+#include <OgreTimer.h>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -40,7 +41,6 @@ textures, frames, and fonts.
 using namespace Ogre;
 using namespace OgreBites;
 
-std::string resourcesFile = "resources.cfg";
 std::random_device rd;
 std::mt19937 gen(rd());
 enum class MovementAxis { x, y, z, none };

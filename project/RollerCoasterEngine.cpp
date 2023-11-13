@@ -46,6 +46,7 @@ class RollerCoaster:
         bool mouseReleased(const MouseButtonEvent &);
         bool mouseMoved(const MouseMotionEvent &);
         bool keyPressed(const KeyboardEvent &);
+        void frameRendered(const Ogre::FrameEvent& evt);
         std::vector<std::pair<SceneNode*, Vector3>> get_intersections(SceneNode *, Ray &);
 
         // Tool
@@ -71,6 +72,9 @@ class RollerCoaster:
         void setHighlightedNode(SceneNode* node) noexcept;
         void get_intersections(SceneNode *, Ray &, std::map<Real, SceneNode*>&);
 
+        // Resource File
+        std::string resourcesFile = "resources.cfg";
+        
         // Basic
         SceneManager* scnMgr;
         TrayManager* trayMgr;
@@ -79,6 +83,7 @@ class RollerCoaster:
         int heightApp;
         int sfxVolume;      
         int musicVolume;
+        Ogre::Timer timer;
 
         // Interface
         bool worldWasClicked;
@@ -147,7 +152,7 @@ void RollerCoaster::setup()
     Light* light = scnMgr->createLight("MainLight");
     SceneNode* lightNode = scnMgr->getRootSceneNode()->createChildSceneNode("lightNode");
     lightNode->attachObject(light);
-    lightNode->setPosition(10, 10, 10);
+    lightNode->setPosition(0, 0, 0);
 
     // Camera
     SceneNode* camNode = scnMgr->getRootSceneNode()->createChildSceneNode("camNode");
@@ -296,6 +301,7 @@ void RollerCoaster::creditsGUI(int part)
         float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
         trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
     }
+    trayMgr->showLogo(TL_BOTTOM,2000); // Show Logo of ALKELEAN GAMES
 }
 
 // END GUI
@@ -309,12 +315,12 @@ void RollerCoaster::play()
     this->trayMgr->destroyAllWidgets();
 
     //Skybox
-    scnMgr->setSkyBox(true, "Examples/MorningSkyBox");
+    scnMgr->setSkyBox(true, "Examples/StormySkyBox");
     RTShader::ShaderGenerator* shadergen = RTShader::ShaderGenerator::getSingletonPtr();
     shadergen->addSceneManager(scnMgr);
     scnMgr->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
-    // Ogro
+    // Monkey Suzanne
     SceneNode* ogreNode1 = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreNode1");
     Entity* ogreEntity1 = scnMgr->createEntity("Suzanne.mesh");
     ogreNode1->attachObject(ogreEntity1);
@@ -453,23 +459,25 @@ bool RollerCoaster::mouseReleased(const MouseButtonEvent &evt)
 // Handle mouse movement events (Rotation direction, or move a node)
 bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
 {    
-    // evt: type, windowID, x, y, xrel, yrel
-    Camera* myCam {scnMgr->getCamera("myCam")};
-    
-    Ray mouseRay {
-        myCam->getCameraToViewportRay(
-            evt.x / float(myCam->getViewport()->getActualWidth()),
-            evt.y / float(myCam->getViewport()->getActualHeight())
-            )
-        };
+    if(this->mTerrainsImported)
+    {
+        // evt: type, windowID, x, y, xrel, yrel
+        Camera* myCam {scnMgr->getCamera("myCam")};
+        
+        Ray mouseRay {
+            myCam->getCameraToViewportRay(
+                evt.x / float(myCam->getViewport()->getActualWidth()),
+                evt.y / float(myCam->getViewport()->getActualHeight())
+                )
+            };
 
-    
-    if (worldWasClicked) // Rotate scene
-    {    
-        rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+        if (worldWasClicked) // Rotate scene
+        {    
+            rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+        }
+        return true;
     }
-    
-    return true;
+    return false;
 }
 
 // Handle keyboard events (Translate or rotate camera)
@@ -504,20 +512,20 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
         if (highlightedNode != nullptr)
         {
-            highlightedNode->translate(direction * 3.5);
+            highlightedNode->translate(direction * 1.5);
         }
         auto cameraNode {scnMgr->getSceneNode("camNode")};
-        cameraNode->translate(direction * 3.5);
+        cameraNode->translate(direction * 1.5);
     }
     else if (evt.keysym.sym == 115) //Key "s" : move down camera
     {
         auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
         if (highlightedNode != nullptr)
         {
-            highlightedNode->translate(-direction * 3.5);
+            highlightedNode->translate(-direction * 1.5);
         }
         auto cameraNode {scnMgr->getSceneNode("camNode")};
-        cameraNode->translate(-direction * 3.5);
+        cameraNode->translate(-direction * 1.5);
     }
     
     else if (evt.keysym.sym == 97) // Key "a" : move left camera
@@ -525,23 +533,32 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         auto direction = scnMgr->getCamera("myCam")->getRealRight();
         if (highlightedNode != nullptr)
         {
-            highlightedNode->translate(-direction * 3.5);
+            highlightedNode->translate(-direction * 1.5);
         }
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(-direction * 3.5);
+        cameraNode->translate(-direction * 1.5);
     }
     else if (evt.keysym.sym == 100) // Key "d" : move right camera
     {
         auto direction = scnMgr->getCamera("myCam")->getRealRight();
         if (highlightedNode != nullptr)
         {
-            highlightedNode->translate(direction * 3.5);
+            highlightedNode->translate(direction * 1.5);
         }
         auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->translate(direction * 3.5);
+        cameraNode->translate(direction * 1.5);
     }
     
     return true;
+}
+
+void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
+{
+    if(mTerrainsImported && this->timer.getMilliseconds() > 30000)
+    {
+        scnMgr->setSkyBox(true, "Examples/MorningSkyBox");
+        timer.reset();
+    } 
 }
 
 void RollerCoaster::setHighlightedNode(SceneNode* node) noexcept
@@ -694,16 +711,16 @@ void RollerCoaster::loadResource()
     try
     {
         // Check the file extension
-        if(resourcesFile.substr(resourcesFile.find_last_of(".") + 1) != "cfg")
+        if(this->resourcesFile.substr(this->resourcesFile.find_last_of(".") + 1) != "cfg")
             std::cerr << "Error: The file extension is not .cfg" << '\n';
         else
         {
-            std::ifstream ifs(resourcesFile.c_str(), std::ios::binary|std::ios::in);
+            std::ifstream ifs(this->resourcesFile.c_str(), std::ios::binary|std::ios::in);
             // Check the file opening
             if (ifs.is_open())
             {
                 Ogre::ConfigFile cf;
-                cf.load(resourcesFile);
+                cf.load(this->resourcesFile);
                 Ogre::String name, locType;
                 for (const auto& ti : cf.getSettings())
                 {
@@ -843,6 +860,7 @@ void RollerCoaster::defineTerrain(long x, long y)
         Ogre::Image img;
         getTerrainImage(x % 2 != 0, y % 2 != 0, img);
         mTerrainGroup->defineTerrain(x, y, &img);
+        timer.reset(); //For the skybox
         mTerrainsImported = true;
     }
 }
