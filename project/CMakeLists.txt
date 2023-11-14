@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 11)
 # Resources
 find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 configure_file(resources.cfg resources.cfg COPYONLY)
-file(COPY zip DESTINATION .)
+file(COPY assets/material DESTINATION ./assets)
 file(COPY assets/img/backgroundMain DESTINATION ./assets/img)
 file(COPY assets/img/gui DESTINATION ./assets/img)
 file(COPY assets/img/logo DESTINATION ./assets/img)
@@ -19,6 +19,7 @@ file(COPY assets/img/sky DESTINATION ./assets/img)
 file(COPY assets/texture DESTINATION ./assets)
 file(COPY assets/model DESTINATION ./assets)
 file(COPY assets/fonts DESTINATION ./assets)
+
 
 # Executable
 add_executable(${PROJECT_NAME} RollerCoasterEngine.cpp)

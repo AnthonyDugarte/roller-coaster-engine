@@ -1,0 +1,355 @@
+# a template for most widget materials
+material SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            lighting off
+            scene_blend alpha_blend
+            depth_check off
+            transparent_sorting off
+            
+            texture_unit
+            {
+                tex_address_mode clamp
+                filtering linear linear none
+            }
+        }
+    }
+}
+
+material SdkTrays/Cursor : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture cursor.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Shade
+{
+    technique
+    {
+        pass
+        {
+            lighting off
+            scene_blend alpha_blend
+            depth_check off
+            
+		    texture_unit
+			{
+                tex_address_mode clamp
+			    texture shade.png
+			}
+        }
+    }
+}
+
+material SdkTrays/Bands
+{
+    technique
+    {
+        pass
+        {
+            lighting off
+            scene_blend alpha_blend
+            depth_check off
+            
+		    texture_unit
+			{
+			    texture bands.png
+				scroll_anim 0 -0.032
+				scale 1 0.743
+			}
+			
+		    texture_unit
+			{
+			    texture bands.png
+				scroll_anim 0 0.031
+			}
+        }
+    }
+}
+
+material SdkTrays/Tray : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture tray.png
+            }
+        }
+    }
+}
+
+material SdkTrays/MiniTray : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture mini_tray.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Button/Up : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture button_up.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Button/Over : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture button_over.png
+            }
+			
+		    texture_unit
+			{
+			    texture pulse.png
+			    colour_op add
+				scroll_anim 1 0
+				scale 100 1
+			}
+        }
+    }
+}
+
+material SdkTrays/Button/Down : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture button_down.png
+            }
+        }
+    }
+}
+
+material SdkTrays/TextBox : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture text_box.png
+            }
+        }
+    }
+}
+
+material SdkTrays/MiniTextBox : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture mini_text_box.png
+            }
+        }
+    }
+}
+
+material SdkTrays/MiniTextBox/Over : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture mini_text_box_over.png
+            }
+			
+		    texture_unit
+			{
+			    texture pulse.png
+			    colour_op add
+				scroll_anim 1 0
+				scale 100 1
+			}
+        }
+    }
+}
+
+material SdkTrays/ScrollTrack : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture track.png
+            }
+        }
+    }
+}
+
+material SdkTrays/SliderTrack : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture track.png
+                rotate 90
+            }
+        }
+    }
+}
+
+material SdkTrays/Handle : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture handle.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Label : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture label.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Separator : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture separator.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Logo : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture AlkeleanLogo.png
+            }
+        }
+    }
+}
+
+material SdkTrays/LogoAlkelean : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture LogoAlkeleanGames.png
+            }
+        }
+    }
+}
+
+material SdkTrays/LogoRoller : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture RollerCoasterEngineLogo.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Frame : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture frame.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Frame/Over : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture frame.png
+            }
+			
+		    texture_unit
+			{
+			    texture bands.png
+			    colour_op_ex modulate_x2 src_current src_texture
+				scroll_anim 0 0.5
+			}
+        }
+    }
+}
