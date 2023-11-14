@@ -122,6 +122,9 @@ RollerCoaster::RollerCoaster() :
 
 void RollerCoaster::setup()
 {
+    // Init settings
+    Settings::init();
+    
     //Hide Button Maximize
     Ogre::NameValuePairList parms;
     parms["border"] = "fixed";
@@ -352,6 +355,7 @@ void RollerCoaster::play()
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "OkButtonPlay", "OK", buttonWidth);
+    Settings::play_sound();
 }  
 
 // Override from TrayListener to manage click events in buttons

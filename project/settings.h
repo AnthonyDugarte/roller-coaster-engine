@@ -32,14 +32,53 @@ textures, frames, and fonts.
 #include <Terrain/OgreTerrain.h>
 #include <Terrain/OgreTerrainGroup.h>
 #include <OgreTimer.h>
+
+#include <SFML/Audio.hpp>
+
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <random>
 #include <map>
 #include <memory>
+#include <random>
+#include <stdexcept>
+#include <unordered_map>
 
+namespace fs = std::filesystem;
 using namespace Ogre;
 using namespace OgreBites;
 
 std::random_device rd;
 std::mt19937 gen(rd());
+
+struct Settings
+{
+    static const fs::path SOUNDS_PATH;
+    static sf::Music music;
+    
+    static void init();
+    static void load_sounds();
+    static void play_sound();
+};
+
+const fs::path Settings::SOUNDS_PATH{"assets/music/"};
+sf::Music Settings::music{};
+
+void Settings::init()
+{
+    Settings::load_sounds();
+}
+
+void Settings::load_sounds()
+{
+    if (!Settings::music.openFromFile(Settings::SOUNDS_PATH / "marios_way.ogg"))
+    {
+        throw std::runtime_error{"Error loading music assets/music/marios_way.ogg"};
+    }
+}
+
+void Settings::play_sound()
+{
+    Settings::music.setLoop(true);
+    Settings::music.play();
+}
