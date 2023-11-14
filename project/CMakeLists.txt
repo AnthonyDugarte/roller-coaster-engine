@@ -20,7 +20,6 @@ file(COPY assets/texture DESTINATION ./assets)
 file(COPY assets/model DESTINATION ./assets)
 file(COPY assets/fonts DESTINATION ./assets)
 
-
 # Executable
 add_executable(${PROJECT_NAME} RollerCoasterEngine.cpp)
 target_link_libraries(

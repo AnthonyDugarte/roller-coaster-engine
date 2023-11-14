@@ -85,6 +85,7 @@ class RollerCoaster:
         int heightApp;
         int sfxVolume;      
         int musicVolume;
+        int sky;
         Ogre::Timer timer;
 
         // Interface
@@ -115,7 +116,8 @@ RollerCoaster::RollerCoaster() :
     mMovableFound{false},
     rotationSpeed{0.5f},
     highlightedNode{nullptr},
-    mRayScnQuery{0}
+    mRayScnQuery{0},
+    sky{1}
 {}
 
 void RollerCoaster::setup()
@@ -197,11 +199,12 @@ void RollerCoaster::menuGUI()
     SceneNode * background  = nullptr;
     if (not scnMgr->hasSceneNode("Background"))
     {    
+        this->sky = this->randomNumber(1,4);
 		// The child background does not exist
 	
         // Create background material
         MaterialPtr material = MaterialManager::getSingleton().create("BackgroundMenu", "General");
-        material->getTechnique(0)->getPass(0)->createTextureUnitState("rail"+std::to_string(this->randomNumber(1,4))+".jpg");
+        material->getTechnique(0)->getPass(0)->createTextureUnitState("rail"+std::to_string(this->sky)+".jpg");
         material->getTechnique(0)->getPass(0)->setDepthCheckEnabled(false);
         material->getTechnique(0)->getPass(0)->setDepthWriteEnabled(false);
         material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
@@ -314,7 +317,7 @@ void RollerCoaster::play()
     this->trayMgr->destroyAllWidgets();
 
     //Skybox
-    scnMgr->setSkyBox(true, "Examples/StormySkyBox");
+    scnMgr->setSkyBox(true, "Sky/SkyBox"+std::to_string(this->sky));
     RTShader::ShaderGenerator* shadergen = RTShader::ShaderGenerator::getSingletonPtr();
     shadergen->addSceneManager(scnMgr);
     scnMgr->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
@@ -547,9 +550,13 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 
 void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
 {
-    if(mTerrainsImported && this->timer.getMilliseconds() > 30000)
+    if(mTerrainsImported && this->timer.getMilliseconds() > 6000)
     {
-        scnMgr->setSkyBox(true, "Examples/MorningSkyBox");
+        if(this->sky < 5)
+            this->sky++;
+        else
+            this->sky = 1;
+            scnMgr->setSkyBox(true, "Sky/SkyBox"+std::to_string(this->sky));
         timer.reset();
     } 
 }
@@ -574,8 +581,10 @@ void RollerCoaster::rotateScene(int speedX, int speedY) noexcept
     // Moving camNode to TempNode
     SceneNode* camNode {scnMgr->getSceneNode("camNode")};
     SceneNode* fatherCamera {camNode->getParentSceneNode()};
-    camNode->yaw(Degree(speedX * 0.1));
-    camNode->pitch(Degree(speedY * 0.1));
+    if(abs(speedX) > abs(speedY))
+        camNode->yaw(Degree(speedX * 0.1));
+    else
+        camNode->pitch(Degree(speedY * 0.1));
 }
 
 void RollerCoaster::resetHighlightedNode(void) noexcept

@@ -106,7 +106,7 @@ material Examples/SceneSkyBox2
 	}
 }
 
-material Examples/CloudyNoonSkyBox
+material Sky/SkyBox3
 {
 	technique
 	{
@@ -124,7 +124,7 @@ material Examples/CloudyNoonSkyBox
 	}
 }
 
-material Examples/StormySkyBox
+material Sky/SkyBox4
 {
 	technique
 	{
@@ -142,7 +142,7 @@ material Examples/StormySkyBox
 	}
 }
 
-material Examples/EarlyMorningSkyBox
+material Sky/SkyBox1
 {
 	technique
 	{
@@ -160,7 +160,7 @@ material Examples/EarlyMorningSkyBox
 	}
 }
 
-material Examples/MorningSkyBox
+material Sky/SkyBox2
 {
 	technique
 	{
@@ -248,7 +248,7 @@ material Examples/MorningCubeMap
 	}
 }
 
-material Examples/EveningSkyBox
+material Sky/SkyBox5
 {
 	technique
 	{
@@ -329,7 +329,7 @@ material Examples/Chrome
 	}
 }
 
-material Examples/SpaceSkyPlane
+material Sky/SkyBox6
 {
 	technique
 	{
@@ -340,7 +340,7 @@ material Examples/SpaceSkyPlane
 
 			texture_unit
 			{
-				texture spacesky.jpg
+				texture spacesky.png
 			}
 		}
 	}
