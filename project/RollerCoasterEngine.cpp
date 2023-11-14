@@ -83,7 +83,7 @@ class RollerCoaster:
         RaySceneQuery* mRayScnQuery;
         int widthApp;
         int heightApp;
-        int sfxVolume;      
+        int fxVolume;      
         int musicVolume;
         int sky;
         Ogre::Timer timer;
@@ -106,7 +106,7 @@ RollerCoaster::RollerCoaster() :
     ApplicationContext("Roller Coaster Engine"),
     scnMgr{nullptr},
     trayMgr{nullptr},
-    sfxVolume{100},
+    fxVolume{100},
     musicVolume{100},
     widthApp{800},
     heightApp{600},
@@ -121,10 +121,7 @@ RollerCoaster::RollerCoaster() :
 {}
 
 void RollerCoaster::setup()
-{
-    // Init settings
-    Settings::init();
-    
+{       
     //Hide Button Maximize
     Ogre::NameValuePairList parms;
     parms["border"] = "fixed";
@@ -187,7 +184,10 @@ void RollerCoaster::setup()
     addInputListener(trayMgr);
     trayMgr->hideCursor(); // Hide cursor of Ogre
 
+    // Load sounds and resources
+    Settings::loadSounds();
     this->loadResource();
+    Settings::playMainMenuMusic();
     this->menuGUI();
 }
 
@@ -259,9 +259,9 @@ void RollerCoaster::settingsGUI()
     // Put the caption beside selected item, width must be bigger than box width (Position, ID, Value, width, items, options)
     trayMgr->createThickSelectMenu(TL_CENTER, "resolution", "Resolution", labelWidth, 4, {"800x600", "1024x760", "1024x768", "1152x864", "1280x720", "1280x768", "1280x800", "1280x960", "1280x1024", "1360x764", "1400x1050", "1440x900", "1600x1200", "1680x1050", "1792x1344", "1856x1392", "1920x1080", "1920x1200", "1920x1440", "2560x1440", "2560x1600", "2880x1800", "3840x2160", "3840x2400"});
     // Slider (Position, ID, Title, widthText, widthValue, MinValue, MaxValue, Division+1)
-    OgreBites::Slider *sfx = trayMgr->createThickSlider(TL_CENTER, "effects", "SFX Volume", labelWidth, 50, 0, 100, 101);
+    OgreBites::Slider *fx = trayMgr->createThickSlider(TL_CENTER, "effects", "fx Volume", labelWidth, 50, 0, 100, 101);
     OgreBites::Slider *music = trayMgr->createThickSlider(TL_CENTER, "music", "Music Volume", labelWidth, 50, 0, 100, 101);
-    sfx->setValue(this->sfxVolume);
+    fx->setValue(this->fxVolume);
     music->setValue(this->musicVolume);
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
@@ -355,14 +355,19 @@ void RollerCoaster::play()
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "OkButtonPlay", "OK", buttonWidth);
-    Settings::play_sound();
+    Settings::stopMainMenuMusic();
+    Settings::playAmbienceMusic();
 }  
 
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
 {
+    Settings::sounds["click"].play();
     if(button->getCaption() == "PLAY")
+    {
         this->play();
+        Settings::sounds["start"].play();
+    }
     if(button->getCaption() == "SETTINGS")
         this->settingsGUI();
     if(button->getCaption() == "CREDITS")
@@ -384,9 +389,16 @@ void RollerCoaster::buttonHit(Button * button)
 void RollerCoaster::sliderMoved(Slider * slider)
 {
     if (slider->getName().compare("effects") == 0)
-        this->sfxVolume = slider->getValue();
+    {
+        Settings::setFxVolume(this->fxVolume);
+        this->fxVolume = slider->getValue();
+    }
     else
+    {
         this->musicVolume = slider->getValue();
+        Settings::setMusicVolume(this->musicVolume);
+    }
+    Settings::sounds["slider"].play();
 }
 
 // Override from TrayListener to manage slide events
@@ -554,7 +566,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 
 void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
 {
-    if(mTerrainsImported && this->timer.getMilliseconds() > 6000)
+    if(mTerrainsImported && this->timer.getMilliseconds() > 288000)
     {
         if(this->sky < 5)
             this->sky++;

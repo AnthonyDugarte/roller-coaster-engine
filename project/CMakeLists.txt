@@ -26,6 +26,8 @@ file(COPY assets/texture DESTINATION ./assets)
 file(COPY assets/model DESTINATION ./assets)
 file(COPY assets/fonts DESTINATION ./assets)
 file(COPY assets/music DESTINATION ./assets)
+file(COPY assets/fx/ui DESTINATION ./assets/fx)
+file(COPY assets/fx/wagon DESTINATION ./assets/fx)
 
 # Executable
 add_executable(${PROJECT_NAME} RollerCoasterEngine.cpp)
