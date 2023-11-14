@@ -34,6 +34,7 @@ class RollerCoaster:
         void menuGUI();
         void settingsGUI();
         void creditsGUI(int);
+        void buildGUI();
 
         // Interface
         void play();
@@ -86,6 +87,7 @@ class RollerCoaster:
         int fxVolume;      
         int musicVolume;
         int sky;
+        bool pause;
         Ogre::Timer timer;
 
         // Interface
@@ -117,7 +119,8 @@ RollerCoaster::RollerCoaster() :
     rotationSpeed{0.5f},
     highlightedNode{nullptr},
     mRayScnQuery{0},
-    sky{1}
+    sky{1},
+    pause{false}
 {}
 
 void RollerCoaster::setup()
@@ -200,8 +203,8 @@ void RollerCoaster::menuGUI()
     this->trayMgr->destroyAllWidgets();
 
     SceneNode * background  = nullptr;
-    if (not scnMgr->hasSceneNode("Background"))
-    {    
+    if (!scnMgr->hasSceneNode("Background"))
+    {
         this->sky = this->randomNumber(1,4);
 		// The child background does not exist
 	
@@ -236,14 +239,14 @@ void RollerCoaster::menuGUI()
     {    
         background = scnMgr->getSceneNode("Background");
     }
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
     trayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
 }
 
 void RollerCoaster::settingsGUI()
@@ -254,7 +257,7 @@ void RollerCoaster::settingsGUI()
     float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
     
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "LogoRoller", "SdkTrays/LogoRoller"), TL_CENTER, 2000); // Show Logo of ROLLER COASTER
     
     // Put the caption beside selected item, width must be bigger than box width (Position, ID, Value, width, items, options)
     trayMgr->createThickSelectMenu(TL_CENTER, "resolution", "Resolution", labelWidth, 4, {"800x600", "1024x760", "1024x768", "1152x864", "1280x720", "1280x768", "1280x800", "1280x960", "1280x1024", "1360x764", "1400x1050", "1440x900", "1600x1200", "1680x1050", "1792x1344", "1856x1392", "1920x1080", "1920x1200", "1920x1440", "2560x1440", "2560x1600", "2880x1800", "3840x2160", "3840x2400"});
@@ -265,8 +268,11 @@ void RollerCoaster::settingsGUI()
     music->setValue(this->musicVolume);
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
-    trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
-    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "/LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
+    if(this->mTerrainsImported)
+        trayMgr->createButton(TL_CENTER, "ReturnBuildButtonHide", "RETURN TO BUILD", buttonWidth);
+    else
+        trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
 }
 
 void RollerCoaster::creditsGUI(int part)
@@ -307,6 +313,32 @@ void RollerCoaster::creditsGUI(int part)
         trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
     }
     trayMgr->showLogo(TL_BOTTOM,2000); // Show Logo of ALKELEAN GAMES
+}
+
+void RollerCoaster::buildGUI()
+{
+    // Clean
+    this->trayMgr->destroyAllWidgets();
+
+    trayMgr->createLabel(TL_TOPLEFT, "coinLabel", "400", 100);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Coin", "SdkTrays/Coin"), TL_TOPLEFT, 2000); // Show Icon Coin
+    trayMgr->createLabel(TL_TOPLEFT, "clockLabel", "03:00", 100);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Clock", "SdkTrays/Clock"), TL_TOPLEFT, 2000); // Show Icon Clock
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Open", "SdkTrays/Open"), TL_TOPLEFT, 2000); // Show Icon Open
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Rail", "SdkTrays/Rail"), TL_RIGHT, 2000); // Show Icon Rail
+    trayMgr->createButton(TL_RIGHT, "NewRailButton", "New Rail",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Destroy", "SdkTrays/Destroy"), TL_RIGHT, 2000); // Show Icon Destroy
+    trayMgr->createButton(TL_RIGHT, "DestroyRailButton", "Destroy Rail",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Decoration", "SdkTrays/Decoration"), TL_RIGHT, 2000); // Show Icon Decoration
+    trayMgr->createButton(TL_RIGHT, "DecorationButton", "Decoration Rail",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Return", "SdkTrays/Return"), TL_RIGHT, 2000); // Show Icon Return
+    trayMgr->createButton(TL_RIGHT, "UndoButton", "Undo",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Map", "SdkTrays/Map"), TL_RIGHT, 2000); // Show Icon Map
+    trayMgr->createButton(TL_RIGHT, "MapButton", "Show Map",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Repair", "SdkTrays/Repair"), TL_RIGHT, 2000); // Show Icon Repair
+    trayMgr->createButton(TL_RIGHT, "RepairButton", "Repair Rail",200);
+    trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Setting", "SdkTrays/Setting"), TL_BOTTOMLEFT, 2000); // Show Icon Setting
+    trayMgr->createButton(TL_BOTTOMLEFT, "SettingButton", "Settings",200);
 }
 
 // END GUI
@@ -368,8 +400,11 @@ void RollerCoaster::buttonHit(Button * button)
         this->play();
         Settings::sounds["start"].play();
     }
-    if(button->getCaption() == "SETTINGS")
+    if(button->getCaption() == "SETTINGS" || button->getCaption() == "Settings")
+    {
+        this->pause = true;
         this->settingsGUI();
+    }
     if(button->getCaption() == "CREDITS")
         this->creditsGUI(1);
     if(button->getCaption() == "RETURN TO MAIN MENU")
@@ -381,8 +416,11 @@ void RollerCoaster::buttonHit(Button * button)
     }
     if(button->getCaption() == "NEXT")
         this->creditsGUI(2);
-     if(button->getCaption() == "OK")
-        this->trayMgr->destroyAllWidgets();
+     if(button->getCaption() == "OK" || button->getCaption() == "RETURN TO BUILD")
+     {
+        this->pause = false;
+        this->buildGUI();
+    }
 }
 
 // Override from TrayListener to manage slide events
@@ -483,7 +521,7 @@ bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
                 )
             };
 
-        if (worldWasClicked) // Rotate scene
+        if (worldWasClicked && !pause) // Rotate scene
         {    
             rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
         }

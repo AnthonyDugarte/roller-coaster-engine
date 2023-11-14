@@ -464,6 +464,96 @@ overlay_element SdkTrays/LogoRoller Panel
 	height 256
 }
 
+overlay_element SdkTrays/Coin Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Coin
+	horz_align center
+	width 32
+	height 32
+}
+
+overlay_element SdkTrays/Clock Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Clock
+	horz_align center
+	width 32
+	height 32
+}
+
+overlay_element SdkTrays/Open Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Open
+	horz_align center
+	width 32
+	height 32
+}
+
+overlay_element SdkTrays/Rail Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Rail
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Destroy Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Destroy
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Decoration Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Decoration
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Return Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Return
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Map Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Map
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Repair Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Repair
+	horz_align center
+	width 64
+	height 64
+}
+
+overlay_element SdkTrays/Setting Panel
+{
+	metrics_mode pixels
+	material SdkTrays/Setting
+	horz_align center
+	width 64
+	height 64
+}
+
 overlay_element SdkTrays/Picture Panel
 {
 	metrics_mode pixels

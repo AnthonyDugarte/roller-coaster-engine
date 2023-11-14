@@ -319,6 +319,146 @@ material SdkTrays/LogoRoller : SdkTrays/Base
     }
 }
 
+material SdkTrays/Coin : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture coin.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Clock : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture clock.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Open : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture open.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Rail : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture rail.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Destroy : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture destroy.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Decoration : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture decoration.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Return : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture return.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Map : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture map.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Repair : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture repair.png
+            }
+        }
+    }
+}
+
+material SdkTrays/Setting : SdkTrays/Base
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture setting.png
+            }
+        }
+    }
+}
+
 material SdkTrays/Frame : SdkTrays/Base
 {
     technique
