@@ -38,6 +38,7 @@ class RollerCoaster:
 
         // Interface
         void play();
+        void rotateCamera(int , int ) noexcept;
         void buttonHit(Button*);
         void sliderMoved(Slider*);
         void itemSelected(SelectMenu*);
@@ -90,6 +91,7 @@ class RollerCoaster:
         int sky;
         bool pause;
         Ogre::Timer timer;
+        bool cameraMode;
 
         // Interface
         bool worldWasClicked;
@@ -121,14 +123,15 @@ RollerCoaster::RollerCoaster() :
     highlightedNode{nullptr},
     mRayScnQuery{0},
     sky{1},
-    pause{false}
+    pause{false},
+    cameraMode{1}
 {}
 
 void RollerCoaster::setup()
 {       
     //Hide Button Maximize
     Ogre::NameValuePairList parms;
-    parms["border"] = "fixed";
+    parms["border"] = "none";
 
     // Initialize root and create window
     mRoot->initialise(false);
@@ -327,19 +330,19 @@ void RollerCoaster::buildGUI()
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Clock", "SdkTrays/Clock"), TL_TOPLEFT, 2000); // Show Icon Clock
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Open", "SdkTrays/Open"), TL_TOPLEFT, 2000); // Show Icon Open
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Rail", "SdkTrays/Rail"), TL_RIGHT, 2000); // Show Icon Rail
-    trayMgr->createButton(TL_RIGHT, "NewRailButton", "New Rail",200);
+    trayMgr->createButton(TL_RIGHT, "NewRailButton", "New",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Destroy", "SdkTrays/Destroy"), TL_RIGHT, 2000); // Show Icon Destroy
-    trayMgr->createButton(TL_RIGHT, "DestroyRailButton", "Destroy Rail",200);
+    trayMgr->createButton(TL_RIGHT, "RemoveRailButton", "Remove",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Decoration", "SdkTrays/Decoration"), TL_RIGHT, 2000); // Show Icon Decoration
-    trayMgr->createButton(TL_RIGHT, "DecorationButton", "Decoration Rail",200);
+    trayMgr->createButton(TL_RIGHT, "DecorationButton", "Decor.",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Return", "SdkTrays/Return"), TL_RIGHT, 2000); // Show Icon Return
-    trayMgr->createButton(TL_RIGHT, "UndoButton", "Undo",200);
+    trayMgr->createButton(TL_RIGHT, "UndoButton", "Undo",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Map", "SdkTrays/Map"), TL_RIGHT, 2000); // Show Icon Map
-    trayMgr->createButton(TL_RIGHT, "MapButton", "Show Map",200);
+    trayMgr->createButton(TL_RIGHT, "MapButton", "Map",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Repair", "SdkTrays/Repair"), TL_RIGHT, 2000); // Show Icon Repair
-    trayMgr->createButton(TL_RIGHT, "RepairButton", "Repair Rail",200);
+    trayMgr->createButton(TL_RIGHT, "RepairButton", "Repair",100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Setting", "SdkTrays/Setting"), TL_BOTTOMLEFT, 2000); // Show Icon Setting
-    trayMgr->createButton(TL_BOTTOMLEFT, "SettingButton", "Settings",200);
+    trayMgr->createButton(TL_BOTTOMLEFT, "SettingButton", "Settings",130);
 }
 
 // END GUI
@@ -391,6 +394,14 @@ void RollerCoaster::play()
     Settings::stopMainMenuMusic();
     Settings::playAmbienceMusic();
 }  
+
+// Aply a rotation based on mouse speed
+void RollerCoaster::rotateCamera(int speedX, int speedY) noexcept
+{
+    auto cameraNode = scnMgr->getSceneNode("camNode");
+    cameraNode->pitch(Degree(-speedY * 0.3), Node::TS_LOCAL);
+    cameraNode->yaw(Degree(-speedX * 0.3), Node::TS_WORLD);
+}
 
 // Override from TrayListener to manage click events in buttons
 void RollerCoaster::buttonHit(Button * button)
@@ -465,11 +476,14 @@ void RollerCoaster::windowResize(int width, int height)
 // Handle mouse wheel events (Zoom in or Zoom out)
 bool RollerCoaster::mouseWheelRolled(const MouseWheelEvent &evt) // Zoom in/out
 {
-    auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
-    auto cameraNode {scnMgr->getSceneNode("camNode")};
-    cameraNode->translate(evt.y * direction * 1.5);
-
-    return true;
+    if(this->mTerrainsImported && !pause)
+    {
+        auto direction {scnMgr->getCamera("myCam")->getRealDirection()};
+        auto cameraNode {scnMgr->getSceneNode("camNode")};
+        cameraNode->translate(evt.y * direction * 1.5);
+        return true;
+    }
+    return false;
 }
 
 // Handle click events (Save click position)
@@ -502,7 +516,8 @@ bool RollerCoaster::mousePressed(const MouseButtonEvent &evt)
 // Handle realese events (Save realese position)
 bool RollerCoaster::mouseReleased(const MouseButtonEvent &evt)
 {   
-    resetHighlightedNode();
+    if(!cameraMode)
+        resetHighlightedNode();
     worldWasClicked = false;
     return true;
 }	
@@ -510,7 +525,7 @@ bool RollerCoaster::mouseReleased(const MouseButtonEvent &evt)
 // Handle mouse movement events (Rotation direction, or move a node)
 bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
 {    
-    if(this->mTerrainsImported)
+    if(this->mTerrainsImported && !pause)
     {
         // evt: type, windowID, x, y, xrel, yrel
         Camera* myCam {scnMgr->getCamera("myCam")};
@@ -522,9 +537,13 @@ bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
                 )
             };
 
-        if (worldWasClicked && !pause) // Rotate scene
+        if (!pause) // Rotate scene
         {    
-            rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+            if(cameraMode)
+                if(worldWasClicked)
+                    rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+            else
+                rotateCamera(evt.xrel, evt.yrel); // rotate based on relative mouse speed
         }
         return true;
     }
@@ -544,7 +563,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         if (highlightedNode == nullptr)
             cameraNode->pitch(Degree(5), Node::TS_LOCAL);
         else
-            rotateHighlightedNode(45, true);
+            rotateHighlightedNode(90, true);
     }
     else if (evt.keysym.sym == SDLK_DOWN) // Down arrow : rotate x- camera
     {
@@ -552,7 +571,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         if (highlightedNode == nullptr)
             cameraNode->pitch(Degree(-5), Node::TS_LOCAL);
         else
-            rotateHighlightedNode(-45, true);
+            rotateHighlightedNode(-90, true);
     }
     else if (evt.keysym.sym == SDLK_LEFT) // Left arrow : rotate y- camera
     {
@@ -560,7 +579,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         if (highlightedNode == nullptr)
             cameraNode->yaw(Degree(5), Node::TS_WORLD);
         else
-            rotateHighlightedNode(45, false);
+            rotateHighlightedNode(90, false);
     }
     else if (evt.keysym.sym == SDLK_RIGHT) // Right arrow : rotate y+ camera
     {
@@ -568,7 +587,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         if (highlightedNode == nullptr)
             cameraNode->yaw(Degree(-5), Node::TS_WORLD);
         else
-            rotateHighlightedNode(-45, false);
+            rotateHighlightedNode(-90, false);
     }
     else if (evt.keysym.sym == 119) // Key "w" : move up camera
     {
@@ -598,6 +617,14 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         auto cameraNode = scnMgr->getSceneNode("camNode");
         cameraNode->translate(direction * 1.5);
         translateHighlightedNode(direction);
+    }
+    else if (evt.keysym.sym == 99) // Key "c" : change mode camera
+    {
+        resetHighlightedNode();
+        if(cameraMode)
+            cameraMode = 0;
+        else
+            cameraMode = 1;
     }
     
     return true;
@@ -888,12 +915,8 @@ void RollerCoaster::initBlendMaps(Ogre::Terrain* terrain)
 {
     Ogre::Real minHeight0 = 70;
     Ogre::Real fadeDist0 = 40;
-    Ogre::Real minHeight1 = 70;
-    Ogre::Real fadeDist1 = 15;
     Ogre::TerrainLayerBlendMap* blendMap0 = terrain->getLayerBlendMap(1);
-    Ogre::TerrainLayerBlendMap* blendMap1 = terrain->getLayerBlendMap(2);
     float* pBlend0 = blendMap0->getBlendPointer();
-    float* pBlend1 = blendMap1->getBlendPointer();
 
     for (Ogre::uint16 y = 0; y < terrain->getLayerBlendMapSize(); ++y)
     {
@@ -905,16 +928,11 @@ void RollerCoaster::initBlendMaps(Ogre::Terrain* terrain)
             Ogre::Real val = (height - minHeight0) / fadeDist0;
             val = Ogre::Math::Clamp(val, (Ogre::Real)0, (Ogre::Real)1);
             *pBlend0++ = val;
-            val = (height - minHeight1) / fadeDist1;
-            val = Ogre::Math::Clamp(val, (Ogre::Real)0, (Ogre::Real)1);
-            *pBlend1++ = val;
         }
     }
 
     blendMap0->dirty();
-    blendMap1->dirty();
     blendMap0->update();
-    blendMap1->update();
 }
 
 void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
@@ -925,7 +943,7 @@ void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
     
     // determines the distance at which Ogre will still apply our lightmap. 
     // If you increase this, then you will see Ogre apply lighting effects out to a farther distance. 
-    mTerrainGlobals->setCompositeMapDistance(3000);
+    mTerrainGlobals->setCompositeMapDistance(2000);
 
     // Pass our lighting information to our terrain
     mTerrainGlobals->setLightMapDirection(light->getDerivedDirection()); // Apply any transforms that are applied to our Light's direction by any SceneNode it may be attached to
@@ -944,21 +962,18 @@ void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
     // However if you want more flexibility, you can also make Ogre combine the images at loading accordingly as shown below
     Image combined;
     combined.loadTwoImagesAsRGBA("Ground"+std::to_string(this->sky)+"_col.jpg", "Ground"+std::to_string(this->sky)+"_spec.png", "General");
-    TextureManager::getSingleton().loadImage("Ground23_diffspec", "General", combined);
+    TextureManager::getSingleton().loadImage("Ground_diffspec", "General", combined);
 
     // Texture
     // The texture's worldSize determines how big each splat of texture is going to be when applied to the terrain. 
     // A smaller value will increase the resolution of the rendered texture layer because each piece will be stretched less to fill in the terrain. 
-    importData.layerList.resize(3);
+    importData.layerList.resize(2);
     importData.layerList[0].worldSize = 20;
-    importData.layerList[0].textureNames.push_back("Ground23_diffspec");
-    importData.layerList[0].textureNames.push_back("Ground23_normheight.dds");
-    importData.layerList[1].worldSize = 20;
-    importData.layerList[1].textureNames.push_back("Ground23_diffspec");
-    importData.layerList[1].textureNames.push_back("Ground23_normheight.dds");
-    importData.layerList[2].worldSize = 20;
-    importData.layerList[2].textureNames.push_back("Ground23_diffspec");
-    importData.layerList[2].textureNames.push_back("Ground23_normheight.dds");
+    importData.layerList[0].textureNames.push_back("Ground_diffspec");
+    importData.layerList[0].textureNames.push_back("Ground"+std::to_string(this->sky)+"_spec.png");
+    importData.layerList[1].worldSize = 0;
+    importData.layerList[1].textureNames.push_back("Ground_diffspec");
+    importData.layerList[1].textureNames.push_back("Ground_normheight.dds");
 }
 
 // END TERRAIN

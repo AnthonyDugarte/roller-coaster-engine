@@ -496,8 +496,8 @@ overlay_element SdkTrays/Rail Panel
 	metrics_mode pixels
 	material SdkTrays/Rail
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Destroy Panel
@@ -505,8 +505,8 @@ overlay_element SdkTrays/Destroy Panel
 	metrics_mode pixels
 	material SdkTrays/Destroy
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Decoration Panel
@@ -514,8 +514,8 @@ overlay_element SdkTrays/Decoration Panel
 	metrics_mode pixels
 	material SdkTrays/Decoration
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Return Panel
@@ -523,8 +523,8 @@ overlay_element SdkTrays/Return Panel
 	metrics_mode pixels
 	material SdkTrays/Return
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Map Panel
@@ -532,8 +532,8 @@ overlay_element SdkTrays/Map Panel
 	metrics_mode pixels
 	material SdkTrays/Map
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Repair Panel
@@ -541,8 +541,8 @@ overlay_element SdkTrays/Repair Panel
 	metrics_mode pixels
 	material SdkTrays/Repair
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Setting Panel
@@ -550,8 +550,8 @@ overlay_element SdkTrays/Setting Panel
 	metrics_mode pixels
 	material SdkTrays/Setting
 	horz_align center
-	width 64
-	height 64
+	width 32
+	height 32
 }
 
 overlay_element SdkTrays/Picture Panel
