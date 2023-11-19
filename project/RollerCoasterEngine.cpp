@@ -63,6 +63,7 @@ class RollerCoaster:
 
     private:
         // Terrain
+        void getTerrainImage(bool, bool, Ogre::Image&);
         void defineTerrain(long, long);
         void initBlendMaps(Ogre::Terrain*);
         void configureTerrainDefaults(Ogre::Light*);
@@ -850,10 +851,10 @@ bool RollerCoaster::frameRenderingQueued(const Ogre::FrameEvent& fe)
 }
 */
 
-void getTerrainImage(bool flipX, bool flipY, Ogre::Image& img)
+void RollerCoaster::getTerrainImage(bool flipX, bool flipY, Ogre::Image& img)
 {
     // This will load our 'terrain.png' resource.
-    img.load("terrain.png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    img.load("terrain"+std::to_string(this->sky)+".png", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
    
     // Flipping is used to create seamless terrain so that unlimited terrain can be created using a single heightmap
     if (flipX)
@@ -933,31 +934,31 @@ void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
 
     // Get a reference to the import settings of our TerrainGroup and set some basic values
     Ogre::Terrain::ImportData& importData = mTerrainGroup->getDefaultImportSettings();
-    importData.terrainSize = 513;
-    importData.worldSize = 12000.0;
-    importData.inputScale = 600;
-    importData.minBatchSize = 33;
-    importData.maxBatchSize = 65;
+    importData.terrainSize = 1024; //pixel of terrain.png
+    importData.worldSize = 120.0;
+    importData.inputScale = 0; //Montain
+    importData.minBatchSize = 33; //2^n+1
+    importData.maxBatchSize = 65; //2^n+1
 
     // This way you save storage space and speed up loading
     // However if you want more flexibility, you can also make Ogre combine the images at loading accordingly as shown below
     Image combined;
-    combined.loadTwoImagesAsRGBA("Ground23_col.jpg", "Ground23_spec.png", "General");
+    combined.loadTwoImagesAsRGBA("Ground"+std::to_string(this->sky)+"_col.jpg", "Ground"+std::to_string(this->sky)+"_spec.png", "General");
     TextureManager::getSingleton().loadImage("Ground23_diffspec", "General", combined);
 
     // Texture
     // The texture's worldSize determines how big each splat of texture is going to be when applied to the terrain. 
     // A smaller value will increase the resolution of the rendered texture layer because each piece will be stretched less to fill in the terrain. 
     importData.layerList.resize(3);
-    importData.layerList[0].worldSize = 200;
-    importData.layerList[0].textureNames.push_back("Ground37_diffspec.dds");
-    importData.layerList[0].textureNames.push_back("Ground37_normheight.dds");
-    importData.layerList[1].worldSize = 200;
+    importData.layerList[0].worldSize = 20;
+    importData.layerList[0].textureNames.push_back("Ground23_diffspec");
+    importData.layerList[0].textureNames.push_back("Ground23_normheight.dds");
+    importData.layerList[1].worldSize = 20;
     importData.layerList[1].textureNames.push_back("Ground23_diffspec");
     importData.layerList[1].textureNames.push_back("Ground23_normheight.dds");
-    importData.layerList[2].worldSize = 400;
-    importData.layerList[2].textureNames.push_back("Rock20_diffspec.dds");
-    importData.layerList[2].textureNames.push_back("Rock20_diffspec.dds");
+    importData.layerList[2].worldSize = 20;
+    importData.layerList[2].textureNames.push_back("Ground23_diffspec");
+    importData.layerList[2].textureNames.push_back("Ground23_normheight.dds");
 }
 
 // END TERRAIN
