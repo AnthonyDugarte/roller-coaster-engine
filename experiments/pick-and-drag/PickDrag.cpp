@@ -43,7 +43,7 @@ class RollerCoaster :
         TrayManager* mTrayMgr;
         
     private:
-        void rotateScene(int , int ) noexcept;
+        void rotateCamera(int , int ) noexcept;
         void resetHighlightedNode(void) noexcept;
         void setHighlightedNode(SceneNode* ) noexcept;
         void get_intersections(SceneNode *, Ray &, std::map<Real, SceneNode*>&);
@@ -261,11 +261,7 @@ bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
             )
         };
 
-    
-    if (worldWasClicked) // Rotate scene
-    {    
-        rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
-    }
+    rotateCamera(evt.xrel, evt.yrel); // rotate based on relative mouse speed
     
     return true;
 }
@@ -289,31 +285,19 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
     }
     else if (evt.keysym.sym == SDLK_UP) // Up arrow : rotate x+ camera
     {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->pitch(Degree(5), Node::TS_LOCAL);
-        rotateHighlightedNode(5, true);
-        std::cout << cameraNode->getOrientation() << std::endl;
+        rotateHighlightedNode(-45, true);
     }
     else if (evt.keysym.sym == SDLK_DOWN) // Down arrow : rotate x- camera
     {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->pitch(Degree(-5), Node::TS_LOCAL);
-        rotateHighlightedNode(-5, true);
-        std::cout << cameraNode->getOrientation() << std::endl;
+        rotateHighlightedNode(45, true);
     }
     else if (evt.keysym.sym == SDLK_LEFT) // Left arrow : rotate y- camera
     {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->yaw(Degree(5), Node::TS_WORLD);
-        rotateHighlightedNode(5, false);
-        std::cout << cameraNode->getOrientation() << std::endl;
+        rotateHighlightedNode(-45, false);
     }
     else if (evt.keysym.sym == SDLK_RIGHT) // Right arrow : rotate y+ camera
     {
-        auto cameraNode = scnMgr->getSceneNode("camNode");
-        cameraNode->yaw(Degree(-5), Node::TS_WORLD);
-        rotateHighlightedNode(-5, false);
-        std::cout << cameraNode->getOrientation() << std::endl;
+        rotateHighlightedNode(45, false);
     }
     else if (evt.keysym.sym == 119) // Key "w" : move up camera
     {
@@ -321,7 +305,6 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         auto cameraNode {scnMgr->getSceneNode("camNode")};
         cameraNode->translate(direction * 3.5);
         translateHighlightedNode(direction);
-        
     }
     else if (evt.keysym.sym == 115) //Key "s" : move down camera
     {
@@ -359,34 +342,23 @@ void RollerCoaster::rotateHighlightedNode(float angle, bool pitch)
 {
     if (highlightedNode != nullptr)
     {
-        SceneNode* camNode {scnMgr->getSceneNode("camNode")};
-        Vector3 camP {camNode->convertWorldToLocalPosition(Vector3(0,0,0))};
-        Vector3 hlP {highlightedNode->convertWorldToLocalPosition(Vector3(0,0,0))};
-        Vector3 distance {camP - hlP};
-        Quaternion camO {camNode->convertWorldToLocalOrientation(Quaternion(0,0,0,0))};
-        Vector3 destiny {camO*distance};
-        highlightedNode->translate(destiny);
-//        highlightedNode->setPosition(resultP);
-//        if (pitch)
-//        {
-//            highlightedNode->pitch(Degree(angle));
-//        }
-//        else
-//        {
-//            highlightedNode->yaw(Degree(angle));
-//        }
-//        highlightedNode->setPosition(hlP);
+        if (pitch)
+        {
+            highlightedNode->pitch(Degree(angle), Node::TS_LOCAL);
+        }
+        else
+        {
+            highlightedNode->yaw(Degree(angle), Node::TS_WORLD);
+        }
     }
 }
 
 // Aply a rotation based on mouse speed
-void RollerCoaster::rotateScene(int speedX, int speedY) noexcept
+void RollerCoaster::rotateCamera(int speedX, int speedY) noexcept
 {
-    // Moving camNode to TempNode
-    SceneNode* camNode {scnMgr->getSceneNode("camNode")};
-    
-    camNode->yaw(Degree(speedX * 0.1));
-    camNode->pitch(Degree(speedY * 0.1));
+    auto cameraNode = scnMgr->getSceneNode("camNode");
+    cameraNode->pitch(Degree(-speedY * 0.3), Node::TS_LOCAL);
+    cameraNode->yaw(Degree(-speedX * 0.3), Node::TS_WORLD);
 }
 
 // Override from TrayListener to manage click events in buttons
