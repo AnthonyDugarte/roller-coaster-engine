@@ -367,6 +367,51 @@ void RollerCoaster::play()
     ogreNode1->attachObject(ogreEntity1);
     ogreNode1->setPosition(1683, 50, 2110);
 
+    float posY {90};
+    
+    SceneNode* worldNode {scnMgr->getSceneNode("worldNode")};
+    SceneNode* mainRails {worldNode->createChildSceneNode("rails")};
+    Entity* railsEnt = scnMgr->createEntity("Rails.0000.mesh");
+    mainRails->attachObject(railsEnt);
+    mainRails->pitch(Degree(-90));
+    mainRails->setPosition(1483, posY, 2010);
+    
+    SceneNode* mainPosts {worldNode->createChildSceneNode("posts")};
+    Entity* postsEnt = scnMgr->createEntity("Posts.0000.mesh");
+    mainPosts->attachObject(postsEnt);
+    mainPosts->pitch(Degree(-90));
+    mainPosts->setPosition(1483, posY, 2010);
+    
+    SceneNode* mainTheta {worldNode->createChildSceneNode("theta")};
+    Entity* thetaEnt = scnMgr->createEntity("Theta.0000.mesh");
+    mainTheta->attachObject(thetaEnt);
+    mainTheta->pitch(Degree(-90));
+    mainTheta->setPosition(1483, posY, 2010);
+    
+    SceneNode* mainTheta2 {worldNode->createChildSceneNode("theta2")};
+    Entity* thetaEnt2 = scnMgr->createEntity("Theta.0001.mesh");
+    mainTheta2->attachObject(thetaEnt2);
+    mainTheta2->pitch(Degree(-90));
+    mainTheta2->setPosition(1483, posY, 2010);
+    
+    SceneNode* mainTheta3 {worldNode->createChildSceneNode("theta3")};
+    Entity* thetaEnt3 = scnMgr->createEntity("Theta.0002.mesh");
+    mainTheta3->attachObject(thetaEnt3);
+    mainTheta3->pitch(Degree(-90));
+    mainTheta3->setPosition(1483, posY, 2010);
+    
+    SceneNode* mainTheta4 {worldNode->createChildSceneNode("theta4")};
+    Entity* thetaEnt4 = scnMgr->createEntity("Theta.0003.mesh");
+    mainTheta4->attachObject(thetaEnt4);
+    mainTheta4->pitch(Degree(-90));
+    mainTheta4->setPosition(1483, posY, 2010);
+    
+    SceneNode* cube {worldNode->createChildSceneNode("cube")};
+    Entity* cubeEnt = scnMgr->createEntity("Cube.001.mesh");
+    cube->attachObject(cubeEnt);
+    cube->pitch(Degree(-90));
+    cube->setPosition(1483, posY, 2010);
+
     // Create terrain
     this->createScene();
 
@@ -399,8 +444,8 @@ void RollerCoaster::play()
 void RollerCoaster::rotateCamera(int speedX, int speedY) noexcept
 {
     auto cameraNode = scnMgr->getSceneNode("camNode");
-    cameraNode->pitch(Degree(-speedY * 0.3), Node::TS_LOCAL);
-    cameraNode->yaw(Degree(-speedX * 0.3), Node::TS_WORLD);
+    cameraNode->pitch(Degree(-speedY), Node::TS_LOCAL);
+    cameraNode->yaw(Degree(-speedX), Node::TS_WORLD);
 }
 
 // Override from TrayListener to manage click events in buttons
