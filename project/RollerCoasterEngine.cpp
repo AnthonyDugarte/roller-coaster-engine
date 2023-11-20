@@ -63,6 +63,10 @@ class RollerCoaster:
         //virtual bool frameRenderingQueued(const Ogre::FrameEvent& fe);
 
     private:
+        // Create world
+        void createWorld();
+        void createNodeWorld(std::string, std::string, float, float, float, float);
+    
         // Terrain
         void getTerrainImage(bool, bool, Ogre::Image&);
         void defineTerrain(long, long);
@@ -199,6 +203,63 @@ void RollerCoaster::setup()
 }
 
 // END BASIC
+
+void RollerCoaster::createNodeWorld(std::string nameNode, std::string nameMesh, float posX,float posY,float posZ, float angle)
+{
+    SceneNode* worldNode {scnMgr->getSceneNode("worldNode")};
+    SceneNode* node {worldNode->createChildSceneNode(nameNode)};
+    Entity* mesh = scnMgr->createEntity(nameMesh);
+    node->attachObject(mesh);
+    node->pitch(Degree(angle));
+    node->setPosition(posX, posY, posZ);
+}
+
+void RollerCoaster::createWorld()
+{
+    float posY {100}, posX {1483}, posZ {2010};
+    
+    createNodeWorld("thetaNode0", "Theta.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode1", "Theta.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode2", "Theta.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode3", "Theta.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode4", "Theta.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode5", "Theta.0005.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode6", "Theta.0006.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode7", "Theta.0007.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode8", "Theta.0008.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode9", "Theta.0009.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode10", "Theta.0010.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode11", "Theta.0011.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode12", "Theta.0012.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode13", "Theta.0013.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode14", "Theta.0014.mesh", posX, posY, posZ, -90);
+    createNodeWorld("thetaNode15", "Theta.0015.mesh", posX, posY, posZ, -90);
+    
+    createNodeWorld("zetaNode", "Zeta.0000.mesh", posX, posY, posZ, -90);
+    
+    createNodeWorld("railsNode0", "Rails.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("railsNode1", "Rails.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("railsNode2", "Rails.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("railsNode3", "Rails.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("railsNode4", "Rails.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("railsNode5", "Rails.0005.mesh", posX, posY, posZ, -90);
+    
+    createNodeWorld("postsNode0", "Posts.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("postsNode1", "Posts.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("postsNode2", "Posts.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("postsNode3", "Posts.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("postsNode4", "Posts.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("postsNode5", "Posts.0005.mesh", posX, posY, posZ, -90);
+    
+    createNodeWorld("gammaNode0", "Gamma.0000.mesh", posX, posY, posZ, -90);
+    
+    createNodeWorld("epsilonNode0", "Epsilon.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("deltaNode0", "Delta.0000.mesh", posX, posY, posZ, -90);
+
+    createNodeWorld("cubeNode0", "Cube.001.mesh", 1455.8, 103, 2010.2, -90);
+    //Vector3(, , )
+    createNodeWorld("cubeNode1", "Cube.001.mesh", 1584.38, 114, 1999.6, -90);
+}
 
 // START GUI
 void RollerCoaster::menuGUI()
@@ -367,51 +428,6 @@ void RollerCoaster::play()
     ogreNode1->attachObject(ogreEntity1);
     ogreNode1->setPosition(1683, 50, 2110);
 
-    float posY {90};
-    
-    SceneNode* worldNode {scnMgr->getSceneNode("worldNode")};
-    SceneNode* mainRails {worldNode->createChildSceneNode("rails")};
-    Entity* railsEnt = scnMgr->createEntity("Rails.0000.mesh");
-    mainRails->attachObject(railsEnt);
-    mainRails->pitch(Degree(-90));
-    mainRails->setPosition(1483, posY, 2010);
-    
-    SceneNode* mainPosts {worldNode->createChildSceneNode("posts")};
-    Entity* postsEnt = scnMgr->createEntity("Posts.0000.mesh");
-    mainPosts->attachObject(postsEnt);
-    mainPosts->pitch(Degree(-90));
-    mainPosts->setPosition(1483, posY, 2010);
-    
-    SceneNode* mainTheta {worldNode->createChildSceneNode("theta")};
-    Entity* thetaEnt = scnMgr->createEntity("Theta.0000.mesh");
-    mainTheta->attachObject(thetaEnt);
-    mainTheta->pitch(Degree(-90));
-    mainTheta->setPosition(1483, posY, 2010);
-    
-    SceneNode* mainTheta2 {worldNode->createChildSceneNode("theta2")};
-    Entity* thetaEnt2 = scnMgr->createEntity("Theta.0001.mesh");
-    mainTheta2->attachObject(thetaEnt2);
-    mainTheta2->pitch(Degree(-90));
-    mainTheta2->setPosition(1483, posY, 2010);
-    
-    SceneNode* mainTheta3 {worldNode->createChildSceneNode("theta3")};
-    Entity* thetaEnt3 = scnMgr->createEntity("Theta.0002.mesh");
-    mainTheta3->attachObject(thetaEnt3);
-    mainTheta3->pitch(Degree(-90));
-    mainTheta3->setPosition(1483, posY, 2010);
-    
-    SceneNode* mainTheta4 {worldNode->createChildSceneNode("theta4")};
-    Entity* thetaEnt4 = scnMgr->createEntity("Theta.0003.mesh");
-    mainTheta4->attachObject(thetaEnt4);
-    mainTheta4->pitch(Degree(-90));
-    mainTheta4->setPosition(1483, posY, 2010);
-    
-    SceneNode* cube {worldNode->createChildSceneNode("cube")};
-    Entity* cubeEnt = scnMgr->createEntity("Cube.001.mesh");
-    cube->attachObject(cubeEnt);
-    cube->pitch(Degree(-90));
-    cube->setPosition(1483, posY, 2010);
-
     // Create terrain
     this->createScene();
 
@@ -433,11 +449,15 @@ void RollerCoaster::play()
     // Set the body text
     welcome->appendText("Welcome to the exciting world of roller coaster building! Get ready to design and build the most incredible and exciting roller coasters you have ever imagined. Defy gravity, create dizzying spins and thrilling drops as you build your own roller coaster. Have fun and enjoy the ride!");
     
+    
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "OkButtonPlay", "OK", buttonWidth);
     Settings::stopMainMenuMusic();
     Settings::playAmbienceMusic();
+
+    // Render world
+    createWorld();
 }  
 
 // Aply a rotation based on mouse speed
