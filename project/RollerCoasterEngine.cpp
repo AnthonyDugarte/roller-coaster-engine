@@ -104,6 +104,7 @@ class RollerCoaster:
         int sky;
         bool pause;
         Ogre::Timer timer;
+        Ogre::Timer timer2;
         bool cameraMode;
         bool buttonDelete;
         bool buttonUndo;
@@ -413,7 +414,7 @@ void RollerCoaster::instructionsGUI()
     //TextBox (Position, ID, caption, width, height
     TextBox* howToPlay = trayMgr->createTextBox(TL_CENTER, "howToPlay", "HOW TO PLAY", labelWidth, labelHeight);
     // Set the body text
-    howToPlay->appendText("Hola1\nHola2\nHola3\nHola4");
+    howToPlay->appendText("MOUSE:\nWith the mouse you can rotate the camera to move freely.\n\nKEYBOARD:\nW,A,S,D - Moves the camera or an object if selected\nArrows - Rotate the camera or rotate an object if selected,\nEscape - Pause\nE - Place an object\nR - Place a decoration\nU - Undo the last action\nQ - Delete an object if it is selected\nM - Shows the map\nC - Change the camera mode\nSpace - Deselect an object");
     
     // Buttons (Position, ID, Value)
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
@@ -804,7 +805,7 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 
 void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
 {
-    if(mTerrainsImported && this->timer.getMilliseconds() > 120000)
+    if(mTerrainsImported && this->timer.getMilliseconds() > 60000)
     {
         if(this->sky < 5)
             this->sky++;
@@ -813,8 +814,11 @@ void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
             scnMgr->setSkyBox(true, "Sky/SkyBox"+std::to_string(this->sky));
         timer.reset();
     }
-    if(mTerrainsImported && !pause && this->timer.getMilliseconds() > 60000)
+    if(mTerrainsImported && !pause && this->timer2.getMilliseconds() > 1000)
+    {
         clock->setCaption(std::to_string(this->time--));
+        timer2.reset();
+    }
 }
 
 void RollerCoaster::setHighlightedNode(SceneNode* node) noexcept
@@ -989,9 +993,9 @@ void RollerCoaster::createRail()
 void RollerCoaster::createDecoration()
 {
     SceneNode* ogreNode = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreEntity"+std::to_string(this->entity++));
-    Entity* ogreEntity = scnMgr->createEntity("Cube.001.mesh");
+    Entity* ogreEntity = scnMgr->createEntity("fence_crossbar.mesh");
     ogreNode->attachObject(ogreEntity);
-    ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*5);
+    ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*3);
     this->cash -= 50;
     this->updateAccount();
 }
@@ -1131,6 +1135,7 @@ void RollerCoaster::defineTerrain(long x, long y)
         getTerrainImage(x % 2 != 0, y % 2 != 0, img);
         mTerrainGroup->defineTerrain(x, y, &img);
         timer.reset(); //For the skybox
+        timer2.reset(); //For the clock
         mTerrainsImported = true;
     }
 }
