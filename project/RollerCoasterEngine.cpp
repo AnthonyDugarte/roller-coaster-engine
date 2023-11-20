@@ -1022,6 +1022,7 @@ void RollerCoaster::createRail()
     SceneNode* ogreNode = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreEntity"+std::to_string(this->entity++));
     Entity* ogreEntity = scnMgr->createEntity("Cube.001.mesh");
     ogreNode->attachObject(ogreEntity);
+    ogreNode->pitch(Degree(-90));
     ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*10);
     this->cash -= 100;
     this->updateAccount();
