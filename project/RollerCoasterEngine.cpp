@@ -33,6 +33,7 @@ class RollerCoaster:
         // GUI
         void menuGUI();
         void settingsGUI();
+        void instructionsGUI();
         void creditsGUI(int);
         void buildGUI();
 
@@ -66,6 +67,14 @@ class RollerCoaster:
         // Create world
         void createWorld();
         void createNodeWorld(std::string, std::string, float, float, float, float);
+
+        // Menu GUI Build
+        void updateAccount();
+        void createRail();
+        void createDecoration();
+        void undoEntity();
+        void deleteEntity();
+        void map();
     
         // Terrain
         void getTerrainImage(bool, bool, Ogre::Image&);
@@ -96,6 +105,17 @@ class RollerCoaster:
         bool pause;
         Ogre::Timer timer;
         bool cameraMode;
+        bool buttonDelete;
+        bool buttonUndo;
+        bool buttonMap;
+        bool mapStatus;
+        int entity;
+        int time;
+        int cash;
+        Vector3 savePosition;
+        Vector3 saveDirection;
+        Label* clock;
+        Label* account;
 
         // Interface
         bool worldWasClicked;
@@ -127,8 +147,15 @@ RollerCoaster::RollerCoaster() :
     highlightedNode{nullptr},
     mRayScnQuery{0},
     sky{1},
-    pause{false},
-    cameraMode{1}
+    pause{true},
+    cameraMode{1},
+    entity{0},
+    buttonDelete{0},
+    buttonUndo{0},
+    buttonMap{0},
+    mapStatus{0},
+    time{300},
+    cash{5000}
 {}
 
 void RollerCoaster::setup()
@@ -173,8 +200,8 @@ void RollerCoaster::setup()
     cam->setAutoAspectRatio(true);
     camNode->attachObject(cam);
     cam->setNearClipDistance(0.1);
-    camNode->setPosition(Ogre::Vector3(1683, 50, 2116));
-    camNode->lookAt(Ogre::Vector3(1963, 50, 1660), Node::TS_PARENT);
+    camNode->setPosition(Ogre::Vector3(0, 34, 2015));
+    camNode->lookAt(Ogre::Vector3(-93, 34, 2015), Node::TS_PARENT);
 
     // Check to see if our current render system has the capability to handle an infinite far clip distance. 
     //If it does, then we set the far clip distance to zero (which means no far clipping). 
@@ -216,49 +243,42 @@ void RollerCoaster::createNodeWorld(std::string nameNode, std::string nameMesh, 
 
 void RollerCoaster::createWorld()
 {
-    float posY {100}, posX {1483}, posZ {2010};
+    float posX {0}, posY {1},posZ {2010};
     
-    createNodeWorld("thetaNode0", "Theta.0000.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode1", "Theta.0001.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode2", "Theta.0002.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode3", "Theta.0003.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode4", "Theta.0004.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode5", "Theta.0005.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode6", "Theta.0006.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode7", "Theta.0007.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode8", "Theta.0008.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode9", "Theta.0009.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode10", "Theta.0010.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode11", "Theta.0011.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode12", "Theta.0012.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode13", "Theta.0013.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode14", "Theta.0014.mesh", posX, posY, posZ, -90);
-    createNodeWorld("thetaNode15", "Theta.0015.mesh", posX, posY, posZ, -90);
-    
-    createNodeWorld("zetaNode", "Zeta.0000.mesh", posX, posY, posZ, -90);
-    
-    createNodeWorld("railsNode0", "Rails.0000.mesh", posX, posY, posZ, -90);
-    createNodeWorld("railsNode1", "Rails.0001.mesh", posX, posY, posZ, -90);
-    createNodeWorld("railsNode2", "Rails.0002.mesh", posX, posY, posZ, -90);
-    createNodeWorld("railsNode3", "Rails.0003.mesh", posX, posY, posZ, -90);
-    createNodeWorld("railsNode4", "Rails.0004.mesh", posX, posY, posZ, -90);
-    createNodeWorld("railsNode5", "Rails.0005.mesh", posX, posY, posZ, -90);
-    
-    createNodeWorld("postsNode0", "Posts.0000.mesh", posX, posY, posZ, -90);
-    createNodeWorld("postsNode1", "Posts.0001.mesh", posX, posY, posZ, -90);
-    createNodeWorld("postsNode2", "Posts.0002.mesh", posX, posY, posZ, -90);
-    createNodeWorld("postsNode3", "Posts.0003.mesh", posX, posY, posZ, -90);
-    createNodeWorld("postsNode4", "Posts.0004.mesh", posX, posY, posZ, -90);
-    createNodeWorld("postsNode5", "Posts.0005.mesh", posX, posY, posZ, -90);
-    
-    createNodeWorld("gammaNode0", "Gamma.0000.mesh", posX, posY, posZ, -90);
-    
-    createNodeWorld("epsilonNode0", "Epsilon.0000.mesh", posX, posY, posZ, -90);
-    createNodeWorld("deltaNode0", "Delta.0000.mesh", posX, posY, posZ, -90);
-
-    createNodeWorld("cubeNode0", "Cube.001.mesh", 1455.8, 103, 2010.2, -90);
-    //Vector3(, , )
-    createNodeWorld("cubeNode1", "Cube.001.mesh", 1584.38, 114, 1999.6, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0005.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0006.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0007.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0008.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0009.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0010.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0011.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0012.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0013.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0014.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Theta.0015.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Zeta.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Rails.0005.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0001.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0002.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0003.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0004.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Posts.0005.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Gamma.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Epsilon.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Delta.0000.mesh", posX, posY, posZ, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Cube.001.mesh", 28.8, posY, posZ+0.2, -90);
+    createNodeWorld("ogreEntity"+std::to_string(this->entity++), "Cube.001.mesh", 101.38, posY, posZ-11.6, -90);
 }
 
 // START GUI
@@ -309,6 +329,7 @@ void RollerCoaster::menuGUI()
     float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
     trayMgr->createButton(TL_CENTER, "PlayButton", "PLAY", buttonWidth);
     trayMgr->createButton(TL_CENTER, "SettingsButton", "SETTINGS", buttonWidth);
+    trayMgr->createButton(TL_CENTER, "instructionsButton", "INSTRUCTIONS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "CreditsButton", "CREDITS", buttonWidth);
     trayMgr->createButton(TL_CENTER, "ExitButton", "EXIT", buttonWidth);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "LogoAlkelean", "SdkTrays/LogoAlkelean"), TL_BOTTOMRIGHT, 2000); // Show Logo of ALKELEAN GAMES
@@ -380,14 +401,34 @@ void RollerCoaster::creditsGUI(int part)
     trayMgr->showLogo(TL_BOTTOM,2000); // Show Logo of ALKELEAN GAMES
 }
 
+void RollerCoaster::instructionsGUI()
+{
+    //Clean
+    this->trayMgr->destroyAllWidgets();
+
+    float labelWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    float labelHeight = getRenderWindow()->getViewport(0)->getActualHeight() * 0.50;
+    Label* titleInstructions = trayMgr->createLabel(TL_CENTER, "titleInstructions", "INSTRUCTIONS", labelWidth);
+    
+    //TextBox (Position, ID, caption, width, height
+    TextBox* howToPlay = trayMgr->createTextBox(TL_CENTER, "howToPlay", "HOW TO PLAY", labelWidth, labelHeight);
+    // Set the body text
+    howToPlay->appendText("Hola1\nHola2\nHola3\nHola4");
+    
+    // Buttons (Position, ID, Value)
+    float buttonWidth = getRenderWindow()->getViewport(0)->getActualWidth() * 0.60;
+    trayMgr->createButton(TL_CENTER, "ReturnButtonMain", "RETURN TO MAIN MENU", buttonWidth);
+    trayMgr->showLogo(TL_BOTTOM,2000); // Show Logo of ALKELEAN GAMES
+}
+
 void RollerCoaster::buildGUI()
 {
     // Clean
     this->trayMgr->destroyAllWidgets();
 
-    trayMgr->createLabel(TL_TOPLEFT, "coinLabel", "400", 100);
+    account = trayMgr->createLabel(TL_TOPLEFT, "coinLabel", std::to_string(this->cash), 100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Coin", "SdkTrays/Coin"), TL_TOPLEFT, 2000); // Show Icon Coin
-    trayMgr->createLabel(TL_TOPLEFT, "clockLabel", "03:00", 100);
+    clock = trayMgr->createLabel(TL_TOPLEFT, "clockLabel", std::to_string(this->time), 100);
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Clock", "SdkTrays/Clock"), TL_TOPLEFT, 2000); // Show Icon Clock
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Open", "SdkTrays/Open"), TL_TOPLEFT, 2000); // Show Icon Open
     trayMgr->moveWidgetToTray(trayMgr->createDecorWidget(TL_NONE, "Rail", "SdkTrays/Rail"), TL_RIGHT, 2000); // Show Icon Rail
@@ -412,6 +453,9 @@ void RollerCoaster::buildGUI()
 
 void RollerCoaster::play()
 {
+    //Reduce Music Volumen
+    this->musicVolume = 50;
+    
     // Clean
     this->scnMgr->destroySceneNode("Background");
     this->trayMgr->destroyAllWidgets();
@@ -421,12 +465,6 @@ void RollerCoaster::play()
     RTShader::ShaderGenerator* shadergen = RTShader::ShaderGenerator::getSingletonPtr();
     shadergen->addSceneManager(scnMgr);
     scnMgr->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
-
-    // Monkey Suzanne
-    SceneNode* ogreNode1 = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreNode1");
-    Entity* ogreEntity1 = scnMgr->createEntity("Suzanne.mesh");
-    ogreNode1->attachObject(ogreEntity1);
-    ogreNode1->setPosition(1683, 50, 2110);
 
     // Create terrain
     this->createScene();
@@ -484,6 +522,8 @@ void RollerCoaster::buttonHit(Button * button)
     }
     if(button->getCaption() == "CREDITS")
         this->creditsGUI(1);
+    if(button->getCaption() == "INSTRUCTIONS")
+        this->instructionsGUI();
     if(button->getCaption() == "RETURN TO MAIN MENU")
         this->menuGUI();
     if(button->getCaption() == "EXIT")
@@ -496,7 +536,40 @@ void RollerCoaster::buttonHit(Button * button)
      if(button->getCaption() == "OK" || button->getCaption() == "RETURN TO BUILD")
      {
         this->pause = false;
+        resetHighlightedNode();
         this->buildGUI();
+    }
+
+    if(button->getCaption() == "New")
+    {
+        this->createRail();
+        Settings::sounds["set"].play();
+    }
+
+    if(button->getCaption() == "Remove")
+    {
+        buttonDelete = true;
+        Settings::sounds["unset"].play();
+    }
+
+    if(button->getCaption() == "Decor.")
+    {
+        this->createDecoration();
+        Settings::sounds["set"].play();
+    }
+
+    if(button->getCaption() == "Undo")
+    {
+        buttonUndo = true;
+        this->undoEntity();
+        Settings::sounds["set"].play();
+    }
+
+    if(button->getCaption() == "Map")
+    {
+        buttonMap = true;
+        this->map();
+        Settings::sounds["set"].play();
     }
 }
 
@@ -554,7 +627,6 @@ bool RollerCoaster::mouseWheelRolled(const MouseWheelEvent &evt) // Zoom in/out
 // Handle click events (Save click position)
 bool RollerCoaster::mousePressed(const MouseButtonEvent &evt)
 {
-    resetHighlightedNode();
     Camera* myCam {scnMgr->getCamera("myCam")};
     
     Ray mouseRay {
@@ -580,9 +652,17 @@ bool RollerCoaster::mousePressed(const MouseButtonEvent &evt)
 
 // Handle realese events (Save realese position)
 bool RollerCoaster::mouseReleased(const MouseButtonEvent &evt)
-{   
-    if(!cameraMode)
+{
+    if(worldWasClicked)
+    {
+        if(buttonDelete)
+            this->deleteEntity();
+        if(buttonUndo)
+            this->undoEntity();
+        if(buttonMap)
+            this->map();
         resetHighlightedNode();
+    }
     worldWasClicked = false;
     return true;
 }	
@@ -620,7 +700,11 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 {
     if (evt.keysym.sym == SDLK_ESCAPE) // Press Esc
     {
-        getRoot()->queueEndRendering();
+        if(!this->pause)
+        {
+            this->pause = true;
+            this->settingsGUI();
+        }
     }
     else if (evt.keysym.sym == SDLK_UP) // Up arrow : rotate x+ camera
     {
@@ -691,13 +775,36 @@ bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
         else
             cameraMode = 1;
     }
-    
+    else if (evt.keysym.sym == 113) // Key "q" : delete entity
+    {
+        this->deleteEntity();  
+    }
+    else if (evt.keysym.sym == 101) // Key "e" : create rail
+    {
+        this->createRail();  
+    }
+    else if (evt.keysym.sym == 114) // Key "r" : create decoration
+    {
+        this->createDecoration();  
+    }
+    else if (evt.keysym.sym == 117) // Key "u" : undo entity
+    {
+        this->undoEntity();  
+    }
+     else if (evt.keysym.sym == 109) // Key "m" : change view of map
+    {
+        this->map();
+    }
+    else if (evt.keysym.sym == SDLK_SPACE) // Key "space" : deselect entity
+    {
+        this->resetHighlightedNode();  
+    }
     return true;
 }
 
 void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
 {
-    if(mTerrainsImported && this->timer.getMilliseconds() > 288000)
+    if(mTerrainsImported && this->timer.getMilliseconds() > 120000)
     {
         if(this->sky < 5)
             this->sky++;
@@ -705,7 +812,9 @@ void RollerCoaster::frameRendered(const Ogre::FrameEvent&)
             this->sky = 1;
             scnMgr->setSkyBox(true, "Sky/SkyBox"+std::to_string(this->sky));
         timer.reset();
-    } 
+    }
+    if(mTerrainsImported && !pause && this->timer.getMilliseconds() > 60000)
+        clock->setCaption(std::to_string(this->time--));
 }
 
 void RollerCoaster::setHighlightedNode(SceneNode* node) noexcept
@@ -860,6 +969,80 @@ int RollerCoaster::randomNumber(int low, int high)
 
 // END TOOL
 
+// START MENU GUI BUILD
+
+void RollerCoaster::updateAccount()
+{ 
+    account->setCaption(std::to_string(this->cash));
+}
+
+void RollerCoaster::createRail()
+{
+    SceneNode* ogreNode = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreEntity"+std::to_string(this->entity++));
+    Entity* ogreEntity = scnMgr->createEntity("Cube.001.mesh");
+    ogreNode->attachObject(ogreEntity);
+    ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*10);
+    this->cash -= 100;
+    this->updateAccount();
+}
+
+void RollerCoaster::createDecoration()
+{
+    SceneNode* ogreNode = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreEntity"+std::to_string(this->entity++));
+    Entity* ogreEntity = scnMgr->createEntity("Cube.001.mesh");
+    ogreNode->attachObject(ogreEntity);
+    ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*5);
+    this->cash -= 50;
+    this->updateAccount();
+}
+
+void RollerCoaster::undoEntity()
+{
+    if (scnMgr->hasSceneNode("ogreEntity"+std::to_string(this->entity-1)))
+    {    
+        scnMgr->destroySceneNode("ogreEntity"+std::to_string(this->entity-1));
+        entity--;
+    }
+    buttonUndo = false;
+    this->cash += 25;
+    this->updateAccount();
+}
+
+void RollerCoaster::deleteEntity()
+{
+    if (highlightedNode != nullptr)
+    {    
+        scnMgr->destroySceneNode(highlightedNode);
+        highlightedNode = nullptr;
+    }
+    buttonDelete = false;
+    this->cash += 10;
+    this->updateAccount();
+}
+
+void RollerCoaster::map()
+{
+    if(mapStatus)
+    {
+        auto camNode = scnMgr->getSceneNode("camNode");
+        camNode->setPosition(savePosition);
+        camNode->setDirection(saveDirection, Node::TS_WORLD);
+        this->mapStatus = false;
+    }
+    else
+    {
+        auto camNode = scnMgr->getSceneNode("camNode");
+        savePosition = camNode->getPosition();
+        saveDirection = scnMgr->getCamera("myCam")->getRealDirection();
+        camNode->setPosition(-6,350,2000);
+        camNode->lookAt(Ogre::Vector3(-6,-350,2000), Node::TS_WORLD);
+        this->mapStatus = true;
+    }
+    buttonMap = false;
+}
+
+// END MENU GUI BUILD
+
 // START TERRAIN
 
 void RollerCoaster::createScene()
@@ -919,29 +1102,6 @@ void RollerCoaster::destroyScene()
     delete mTerrainGroup;
     delete mTerrainGlobals;
 }
-
-/*
-bool RollerCoaster::frameRenderingQueued(const Ogre::FrameEvent& fe)
-{
-    if (mTerrainGroup->isDerivedDataUpdateInProgress())
-    {
-        if (mTerrainsImported)
-            std::cout<<"Building terrain...\n";
-        else
-            std::cout<<"Updating textures, patience...\n";
-    }
-    else
-    {
-        if (mTerrainsImported)
-        {
-            // FIXME does not end up in the correct resource group
-            // saveTerrains(true);
-            mTerrainsImported = false;
-        }
-    }
-    return 1;
-}
-*/
 
 void RollerCoaster::getTerrainImage(bool flipX, bool flipY, Ogre::Image& img)
 {
@@ -1019,7 +1179,7 @@ void RollerCoaster::configureTerrainDefaults(Ogre::Light* light)
     Ogre::Terrain::ImportData& importData = mTerrainGroup->getDefaultImportSettings();
     importData.terrainSize = 1024; //pixel of terrain.png
     importData.worldSize = 120.0;
-    importData.inputScale = 0; //Montain
+    importData.inputScale = 0; //Mountain
     importData.minBatchSize = 33; //2^n+1
     importData.maxBatchSize = 65; //2^n+1
 
