@@ -1031,7 +1031,9 @@ void RollerCoaster::createRail()
 void RollerCoaster::createDecoration()
 {
     SceneNode* ogreNode = scnMgr->getSceneNode("worldNode")->createChildSceneNode("ogreEntity"+std::to_string(this->entity++));
-    Entity* ogreEntity = scnMgr->createEntity("fence_crossbar.mesh");
+    Entity* ogreEntity = scnMgr->createEntity("conifer_macedonian_pine.mesh");
+    ogreNode->setScale(0.01,0.01,0.01);
+    ogreNode->pitch(Degree(-90));
     ogreNode->attachObject(ogreEntity);
     ogreNode->setPosition(scnMgr->getSceneNode("camNode")->getPosition()+scnMgr->getCamera("myCam")->getRealDirection()*3);
     this->cash -= 50;
