@@ -48,6 +48,7 @@ class RollerCoaster:
         bool mousePressed(const MouseButtonEvent &);
         bool mouseReleased(const MouseButtonEvent &);
         bool mouseMoved(const MouseMotionEvent &);
+        bool keyReleased(const KeyboardEvent &);
         bool keyPressed(const KeyboardEvent &);
         void frameRendered(const Ogre::FrameEvent& evt);
         std::vector<std::pair<SceneNode*, Vector3>> get_intersections(SceneNode *, Ray &);
@@ -118,6 +119,10 @@ class RollerCoaster:
         Label* clock;
         Label* account;
 
+        // KeyboardEvents
+        bool ctrlKey;
+        bool shiftKey;
+
         // Interface
         bool worldWasClicked;
         bool mMovableFound;
@@ -144,6 +149,8 @@ RollerCoaster::RollerCoaster() :
     mTerrainGlobals{0},
     worldWasClicked{false},
     mMovableFound{false},
+    ctrlKey(false),
+    shiftKey(false),
     rotationSpeed{0.5f},
     highlightedNode{nullptr},
     mRayScnQuery{0},
@@ -686,20 +693,50 @@ bool RollerCoaster::mouseMoved(const MouseMotionEvent &evt)
         if (!pause) // Rotate scene
         {    
             if(cameraMode)
+            {            
                 if(worldWasClicked)
                     rotateScene(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+            }
             else
+            {            
                 rotateCamera(evt.xrel, evt.yrel); // rotate based on relative mouse speed
+            }
         }
         return true;
     }
     return false;
 }
 
+bool RollerCoaster::keyReleased(const KeyboardEvent& evt)
+{
+    if (evt.keysym.sym == 1073742049)
+    {
+        shiftKey = false;
+    }
+    else if (evt.keysym.sym == 1073742048)
+    {
+        ctrlKey = false;
+    }
+    return true;
+}
+
 // Handle keyboard events (Translate or rotate camera)
 bool RollerCoaster::keyPressed(const KeyboardEvent& evt)
 {
-    if (evt.keysym.sym == SDLK_ESCAPE) // Press Esc
+    if (ctrlKey and shiftKey and evt.keysym.sym == 101) // Exit game
+    {
+        delete trayMgr;
+        getRoot()->queueEndRendering();
+    }
+    else if (evt.keysym.sym == 1073742049) // Press shift
+    {
+        shiftKey = true;
+    }
+    else if (evt.keysym.sym == 1073742048) // Press ctrl
+    {
+        ctrlKey = true;
+    }
+    else if (evt.keysym.sym == SDLK_ESCAPE) // Press Esc
     {
         if(!this->pause)
         {
